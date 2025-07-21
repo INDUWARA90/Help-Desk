@@ -59,7 +59,7 @@ function AskQuestion() {
     };
 
     try {
-      const response = await fetch('http://helpdesk-env.eba-pamex2iy.eu-north-1.elasticbeanstalk.com/api/questions', {
+      const response = await fetch('https://helpdesk-production-c4f9.up.railway.app/api/questions', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

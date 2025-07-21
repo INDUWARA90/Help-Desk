@@ -47,7 +47,7 @@ function SingleQuestionPage() {
     const currentUser = JSON.parse(sessionStorage.getItem('currentUser'));
 
     useEffect(() => {
-        fetch(`http://helpdesk-env.eba-pamex2iy.eu-north-1.elasticbeanstalk.com/api/questions/${id}`, {
+        fetch(`https://helpdesk-production-c4f9.up.railway.app/api/questions/${id}`, {
             credentials: 'include',
         })
             .then(res => res.json())
@@ -70,7 +70,7 @@ function SingleQuestionPage() {
             questionId: parseInt(id),
         };
 
-        fetch('http://helpdesk-env.eba-pamex2iy.eu-north-1.elasticbeanstalk.com/api/answers', {
+        fetch('https://helpdesk-production-c4f9.up.railway.app/api/answers', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             credentials: 'include',
@@ -88,7 +88,7 @@ function SingleQuestionPage() {
                 setShowThankYou(true);
 
                 // Re-fetch the question to update answers in real-time
-                fetch(`http://helpdesk-env.eba-pamex2iy.eu-north-1.elasticbeanstalk.com/api/questions/${id}`, { credentials: 'include' })
+                fetch(`https://helpdesk-production-c4f9.up.railway.app/api/questions/${id}`, { credentials: 'include' })
                     .then(res => res.json())
                     .then(updatedQuestion => {
                         setQuestion(updatedQuestion);

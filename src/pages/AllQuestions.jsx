@@ -44,7 +44,7 @@ function AllQuestionsPage() {
 
     if (currentUser) {
       // User logged in — fetch real questions
-      fetch("http://helpdesk-env.eba-pamex2iy.eu-north-1.elasticbeanstalk.com/api/questions", {
+      fetch("https://helpdesk-production-c4f9.up.railway.app/api/questions", {
         method: "GET",
         credentials: "include",
       })

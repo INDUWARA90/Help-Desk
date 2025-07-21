@@ -121,7 +121,7 @@ function UserDashboard() {
       return;
     }
     setLoading(true);
-    fetch('http://helpdesk-env.eba-pamex2iy.eu-north-1.elasticbeanstalk.com/api/questions', {
+    fetch('https://helpdesk-production-c4f9.up.railway.app/api/questions', {
       method: 'GET',
       credentials: 'include',
     })
@@ -177,7 +177,7 @@ function UserDashboard() {
       description: editedDescription,
     };
 
-    fetch(`http://helpdesk-env.eba-pamex2iy.eu-north-1.elasticbeanstalk.com/api/questions/${editQuestion.questionId}`, {
+    fetch(`https://helpdesk-production-c4f9.up.railway.app/api/questions/${editQuestion.questionId}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(updatedQuestion),
@@ -210,7 +210,7 @@ function UserDashboard() {
   const performDelete = () => {
     if (!questionToDelete) return;
 
-    fetch(`http://helpdesk-env.eba-pamex2iy.eu-north-1.elasticbeanstalk.com/api/questions/${questionToDelete.questionId}`, {
+    fetch(`https://helpdesk-production-c4f9.up.railway.app/api/questions/${questionToDelete.questionId}`, {
       method: 'DELETE',
       credentials: 'include',
     })
