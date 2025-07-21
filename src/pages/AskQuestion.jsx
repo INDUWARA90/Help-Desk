@@ -10,12 +10,12 @@ function AskQuestion() {
   const [isAnonymous, setIsAnonymous] = useState(false);
   const [questionSuccess, setQuestionSuccess] = useState(false);
   const [questionError, setQuestionError] = useState('');
-  // eslint-disable-next-line no-unused-vars
-  const [currentUser, setCurrentUser] = useState(
+  const [isSubmitting, setIsSubmitting] = useState(false); // 👈 New
+  const [currentUser] = useState(
     JSON.parse(sessionStorage.getItem('currentUser'))
   );
 
-  const navigate =useNavigate();
+  const navigate = useNavigate();
 
   const availableCategories = ['Timetable', 'Subjects', 'Exams', 'Labs'];
 
@@ -61,6 +61,8 @@ function AskQuestion() {
       answers: [],
     };
 
+    setIsSubmitting(true); // 👈 Disable button
+
     try {
       const response = await fetch('https://helpdesk-production-c4f9.up.railway.app/api/questions', {
         method: 'POST',
@@ -77,20 +79,21 @@ function AskQuestion() {
         setDescription('');
         setCategories([]);
         setIsAnonymous(false);
-        navigate('/all-questions');
       } else {
         const errText = await response.text();
         setQuestionError(`Failed to submit question. Server says: ${errText}`);
       }
     } catch (error) {
       setQuestionError(`Something went wrong: ${error.message}`);
+    } finally {
+      setIsSubmitting(false); // 👈 Re-enable button
     }
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-rose-100 to-blue-100 py-18 text-gray-900">
       <Header />
-      {/* Ask Form */}
+
       <div className="max-w-3xl mx-auto mt-10 bg-white p-8 rounded-2xl shadow-xl">
         <h2 className="text-2xl font-extrabold mb-6 text-blue-700">Ask a Question</h2>
 
@@ -125,10 +128,11 @@ function AskQuestion() {
               {availableCategories.map((cat) => (
                 <label
                   key={cat}
-                  className={`cursor-pointer px-4 py-2 rounded-full border text-sm font-medium transition ${categories.includes(cat)
-                    ? 'bg-blue-600 text-white border-blue-600'
-                    : 'bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200'
-                    }`}
+                  className={`cursor-pointer px-4 py-2 rounded-full border text-sm font-medium transition ${
+                    categories.includes(cat)
+                      ? 'bg-blue-600 text-white border-blue-600'
+                      : 'bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200'
+                  }`}
                 >
                   <input
                     type="checkbox"
@@ -158,20 +162,24 @@ function AskQuestion() {
           <div className="text-right">
             <button
               type="submit"
-              className="bg-gradient-to-r from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white px-6 py-2 rounded-full text-sm font-semibold transition-shadow shadow-md hover:shadow-lg"
+              disabled={isSubmitting} // 👈 Disable during submission
+              className={`bg-gradient-to-r from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white px-6 py-2 rounded-full text-sm font-semibold transition-shadow shadow-md hover:shadow-lg ${
+                isSubmitting ? 'opacity-50 cursor-not-allowed' : ''
+              }`}
             >
-              Submit Question 🚀
+              {isSubmitting ? 'Submitting...' : 'Submit Question 🚀'}
             </button>
           </div>
         </form>
       </div>
 
-
-
       {/* Success Dialog */}
       <Dialog
         open={questionSuccess}
-        onClose={() => setQuestionSuccess(false)}
+        onClose={() => {
+          setQuestionSuccess(false);
+          navigate('/all-questions');
+        }}
         className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm"
       >
         <Dialog.Panel className="w-full max-w-md bg-white rounded-3xl p-8 shadow-2xl space-y-5 text-center">
@@ -182,7 +190,10 @@ function AskQuestion() {
             Thank you{!isAnonymous && currentUser?.firstName ? `, ${currentUser.firstName}` : ""}! Your question has been posted.
           </p>
           <button
-            onClick={() => setQuestionSuccess(false)}
+            onClick={() => {
+              setQuestionSuccess(false);
+              navigate('/all-questions');
+            }}
             className="mt-4 px-6 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-full font-semibold shadow-lg transition-all"
           >
             Continue
@@ -209,7 +220,6 @@ function AskQuestion() {
           </button>
         </Dialog.Panel>
       </Dialog>
-
     </div>
   );
 }

@@ -1,23 +1,49 @@
-import React from 'react';
+/* eslint-disable no-unused-vars */
+import React, { useState } from 'react';
 
-// eslint-disable-next-line no-unused-vars
 function AnswerModal({ answer, setAnswer, isAnonymous, setIsAnonymous, onClose, onSubmit }) {
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const isAnswerEmpty = answer.trim() === '';
+
+  const handleSubmit = async () => {
+    if (isAnswerEmpty || isSubmitting) return;
+
+    setIsSubmitting(true);
+
+    try {
+      await onSubmit();  // Wait for parent's submit function (should return a Promise)
+      setIsSubmitting(false);
+      onClose();        // Close modal after successful submission
+    } catch (error) {
+      console.error('Answer submission failed:', error);
+      setIsSubmitting(false);
+      // Optionally show error UI here
+    }
+  };
 
   return (
     <div className="fixed inset-0 z-50 backdrop-blur-sm bg-white/30 flex justify-center items-center">
       <div className="bg-white rounded-2xl p-6 w-[90%] md:w-1/3 shadow-xl space-y-4 relative">
-        {/* Close Button */}
+
+        {/* Submitting overlay */}
+        {isSubmitting && (
+          <div className="absolute inset-0 bg-white/70 rounded-2xl z-10 flex items-center justify-center">
+            <span className="text-rose-500 font-semibold animate-pulse">Submitting...</span>
+          </div>
+        )}
+
+        {/* Close button */}
         <button
-          className="absolute top-3 right-4 text-gray-400 hover:text-gray-600 text-xl"
+          className="absolute top-3 right-4 text-gray-400 hover:text-gray-600 text-xl z-20"
           onClick={onClose}
           aria-label="Close modal"
+          disabled={isSubmitting}
         >
           &times;
         </button>
 
-        {/* Modal Heading */}
-        <h3 className="text-xl font-semibold text-rose-600">💡 Submit Your Answer</h3>
+        {/* Modal heading */}
+        <h3 className="text-xl font-semibold text-rose-600 z-0">💡 Submit Your Answer</h3>
 
         {/* Textarea */}
         <textarea
@@ -28,11 +54,15 @@ function AnswerModal({ answer, setAnswer, isAnonymous, setIsAnonymous, onClose, 
           placeholder="Type your answer here..."
           value={answer}
           onChange={(e) => setAnswer(e.target.value)}
+          disabled={isSubmitting}
         />
 
-        {isAnswerEmpty && <p className="text-sm text-red-500 -mt-2">Answer is required.</p>}
+        {/* Validation message */}
+        {isAnswerEmpty && (
+          <p className="text-sm text-red-500 -mt-2">Answer is required.</p>
+        )}
 
-        {/* Toggle Mode */}
+        {/* Optional Anonymous toggle (commented out) */}
         {/* <div className="flex items-center justify-between">
           <label className="text-sm font-medium text-gray-600">
             Mode: {isAnonymous ? 'Anonymous' : 'Regular'}
@@ -40,23 +70,24 @@ function AnswerModal({ answer, setAnswer, isAnonymous, setIsAnonymous, onClose, 
           <button
             onClick={() => setIsAnonymous(!isAnonymous)}
             className="bg-rose-100 text-rose-700 py-1 px-3 rounded-full text-sm hover:bg-rose-200 transition"
+            disabled={isSubmitting}
           >
             Toggle to {isAnonymous ? 'Regular' : 'Anonymous'}
           </button>
         </div> */}
 
-        {/* Submit Button */}
+        {/* Submit button */}
         <div className="text-center pt-2">
           <button
-            onClick={onSubmit}
-            disabled={isAnswerEmpty}
+            onClick={handleSubmit}
+            disabled={isAnswerEmpty || isSubmitting}
             className={`py-2 px-6 rounded-full shadow-md transition transform ${
-              isAnswerEmpty
+              isAnswerEmpty || isSubmitting
                 ? 'bg-gray-300 text-white cursor-not-allowed'
                 : 'bg-gradient-to-r from-rose-500 to-pink-600 text-white hover:scale-105'
             }`}
           >
-            ✅ Submit Answer
+            {isSubmitting ? 'Submitting...' : '✅ Submit Answer'}
           </button>
         </div>
       </div>

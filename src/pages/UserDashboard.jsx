@@ -80,7 +80,7 @@ function UserDashboard() {
   const [editedDescription, setEditedDescription] = useState('');
   const [selectedQuestion, setSelectedQuestion] = useState(null);
 
-  const [questions, setQuestions] = useState([]);
+  const [questions, setQuestions] = useState([]); // all fetched questions
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -91,7 +91,6 @@ function UserDashboard() {
   // Success dialog for delete/update
   const [successMessage, setSuccessMessage] = useState(null);
 
-  // Load current user from sessionStorage or set dummy user if none found
   useEffect(() => {
     const storedUser = sessionStorage.getItem('currentUser');
     if (storedUser) {
@@ -106,17 +105,15 @@ function UserDashboard() {
         myQuestions: [],
       });
     } else {
-      // No logged-in user, set dummy user and dummy questions
       setUser(dummyUser);
       setQuestions(dummyUser.myQuestions);
       setLoading(false);
     }
   }, []);
 
-  // Fetch questions from backend if real user exists (not dummy)
+  // Fetch questions for logged in user
   const fetchQuestions = () => {
     if (!user || user.userId === 'dummy-001') {
-      // Skip fetching if dummy user
       setLoading(false);
       return;
     }
@@ -135,20 +132,17 @@ function UserDashboard() {
         setQuestions(data);
         setLoading(false);
 
-        const storedUser = sessionStorage.getItem('currentUser');
-        if (storedUser) {
-          const parsedUser = JSON.parse(storedUser);
-          const myQuestions = data.filter((q) => q.userId === parsedUser.userId);
+        // Filter my questions
+        const myQs = data.filter((q) => q.userId === user.userId);
 
-          setUser((prevUser) => ({
-            ...prevUser,
-            myQuestions: myQuestions,
-            questionsAsked: myQuestions.length,
-          }));
-        }
+        setUser((prev) => ({
+          ...prev,
+          myQuestions: myQs,
+          questionsAsked: myQs.length,
+        }));
       })
-      .catch((error) => {
-        setError(error.message);
+      .catch((err) => {
+        setError(err.message);
         setLoading(false);
       });
   };
@@ -171,6 +165,7 @@ function UserDashboard() {
 
   const handleSave = () => {
     if (!editQuestion) return;
+
     const updatedQuestion = {
       ...editQuestion,
       title: editedTitle,
@@ -200,13 +195,11 @@ function UserDashboard() {
       });
   };
 
-  // Open Delete Confirmation Modal instead of immediate delete
   const confirmDelete = (question) => {
     setQuestionToDelete(question);
     setIsDeleteModalOpen(true);
   };
 
-  // Called when user confirms delete in modal
   const performDelete = () => {
     if (!questionToDelete) return;
 
@@ -239,6 +232,12 @@ function UserDashboard() {
 
   if (!user) return <LoadingSpinner />;
   if (loading) return <LoadingSpinner />;
+
+  // Use user.myQuestions if exists; else fallback to filtering questions by user
+  const displayedQuestions =
+    user?.myQuestions && user.myQuestions.length > 0
+      ? user.myQuestions
+      : questions.filter((q) => q.userId === user.userId);
 
   return (
     <>
@@ -295,40 +294,39 @@ function UserDashboard() {
             </div>
 
             {/* Questions List or No Data */}
-            {user.myQuestions.length > 0 ? (
+            {displayedQuestions.length > 0 ? (
               <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {user.myQuestions
+                {displayedQuestions
                   .filter(
                     (q) =>
                       q.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                       (q.description &&
                         q.description.toLowerCase().includes(searchTerm.toLowerCase()))
                   )
-                  .map((q, idx) => (
+                  .map((q) => (
                     <div
-                      key={idx}
+                      key={q.questionId}
                       onClick={() => handleCardClick(q)}
-                      className={`cursor-pointer p-4 rounded-xl border-l-4 shadow-sm hover:scale-[1.02] transition ${q.answers && q.answers.length > 0
+                      className={`cursor-pointer p-4 rounded-xl border-l-4 shadow-sm hover:scale-[1.02] transition ${
+                        q.answers && q.answers.length > 0
                           ? 'bg-green-50 border-green-500'
                           : 'bg-yellow-50 border-yellow-500'
-                        } relative`}
+                      } relative`}
                     >
                       <p className="font-medium text-gray-800 truncate" title={q.title}>
                         ❓ {q.title}
                       </p>
-                      <p
-                        className="text-sm text-gray-600 truncate"
-                        title={q.description}
-                      >
+                      <p className="text-sm text-gray-600 truncate" title={q.description}>
                         📄 {q.description || 'No description'}
                       </p>
                       <p className="text-sm text-gray-600">
                         Status:{' '}
                         <span
-                          className={`font-semibold ${q.answers && q.answers.length > 0
+                          className={`font-semibold ${
+                            q.answers && q.answers.length > 0
                               ? 'text-green-600'
                               : 'text-yellow-700'
-                            }`}
+                          }`}
                         >
                           {q.status}
                         </span>
@@ -555,10 +553,11 @@ function UserDashboard() {
                   <p className="mb-2">
                     <strong>📌 Status:</strong>{' '}
                     <span
-                      className={`font-semibold ${selectedQuestion?.status === 'Answered'
+                      className={`font-semibold ${
+                        selectedQuestion?.status === 'Answered'
                           ? 'text-green-600'
                           : 'text-yellow-700'
-                        }`}
+                      }`}
                     >
                       {selectedQuestion?.status}
                     </span>
@@ -572,7 +571,7 @@ function UserDashboard() {
                       <ul className="space-y-3 text-sm text-gray-700">
                         {selectedQuestion.answers.map((answer, index) => (
                           <li
-                            key={index}
+                            key={answer.answerId || index}
                             className="bg-gray-50 border rounded-lg p-3"
                           >
                             <p>{answer.description}</p>
