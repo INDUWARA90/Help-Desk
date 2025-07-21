@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import Header from '../components/Header';
 import { Dialog } from '@headlessui/react';
+import { useNavigate } from 'react-router-dom';
 
 function AskQuestion() {
   const [title, setTitle] = useState('');
@@ -13,6 +14,8 @@ function AskQuestion() {
   const [currentUser, setCurrentUser] = useState(
     JSON.parse(sessionStorage.getItem('currentUser'))
   );
+
+  const navigate =useNavigate();
 
   const availableCategories = ['Timetable', 'Subjects', 'Exams', 'Labs'];
 
@@ -74,6 +77,7 @@ function AskQuestion() {
         setDescription('');
         setCategories([]);
         setIsAnonymous(false);
+        navigate('/all-questions');
       } else {
         const errText = await response.text();
         setQuestionError(`Failed to submit question. Server says: ${errText}`);
