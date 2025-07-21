@@ -17,7 +17,7 @@ function AskQuestion() {
 
   const navigate = useNavigate();
 
-  const availableCategories = ['Timetable', 'Subjects', 'Exams', 'Labs'];
+  const availableCategories = ['Timetable', 'Subjects', 'Exams', 'Labs','Other'];
 
   const handleCategoryChange = (category) => {
     setCategories((prev) =>

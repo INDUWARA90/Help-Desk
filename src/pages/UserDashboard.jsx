@@ -1,6 +1,6 @@
 /* eslint-disable no-unused-vars */
 import React, { useState, useEffect, Fragment } from 'react';
-import { Link } from 'react-router-dom';
+import { data, Link } from 'react-router-dom';
 import { Dialog, Transition } from '@headlessui/react';
 import Header from '../components/Header';
 
@@ -73,13 +73,17 @@ const dummyUser = {
 };
 
 function UserDashboard() {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState({
+    userId: 'dummy-001',
+    name: 'User Loading ....',
+    email: 'Email Loading ....',
+    badges: ['newBie', 'guest', 'tester'],
+  });
   const [searchTerm, setSearchTerm] = useState('');
   const [editQuestion, setEditQuestion] = useState(null);
   const [editedTitle, setEditedTitle] = useState('');
   const [editedDescription, setEditedDescription] = useState('');
   const [selectedQuestion, setSelectedQuestion] = useState(null);
-
   const [questions, setQuestions] = useState([]); // all fetched questions
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -92,66 +96,51 @@ function UserDashboard() {
   const [successMessage, setSuccessMessage] = useState(null);
 
   useEffect(() => {
-    const storedUser = sessionStorage.getItem('currentUser');
-    if (storedUser) {
-      const parsedUser = JSON.parse(storedUser);
-      setUser({
-        userId: parsedUser.userId,
-        name: `${parsedUser.firstName} ${parsedUser.lastName}`,
-        email: parsedUser.email,
-        badges: ['newBie'],
-        questionsAsked: 0,
-        answersGiven: 0,
-        myQuestions: [],
-      });
-    } else {
-      setUser(dummyUser);
-      setQuestions(dummyUser.myQuestions);
-      setLoading(false);
-    }
-  }, []);
+    const fetchUserInfo = async () => {
+      try {
+        const res = await fetch('https://helpdesk-production-c4f9.up.railway.app/api/auth/userinfo', {
+          method: 'GET',
+          credentials: 'include',
+        });
 
-  // Fetch questions for logged in user
-  const fetchQuestions = () => {
-    if (!user || user.userId === 'dummy-001') {
-      setLoading(false);
-      return;
-    }
-    setLoading(true);
-    fetch('https://helpdesk-production-c4f9.up.railway.app/api/questions', {
-      method: 'GET',
-      credentials: 'include',
-    })
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error('Network response was not ok ' + response.status);
+        if (!res.ok) {
+          if (res.status === 401) {
+            setUser(dummyUser);
+            setQuestions(dummyUser.myQuestions);
+            setLoading(false);
+            return;
+          }
+          throw new Error(`Failed to fetch user info: ${res.status}`);
         }
-        return response.json();
-      })
-      .then((data) => {
-        setQuestions(data);
+
+        const userData = await res.json();
+
+        const formattedUser = {
+          userId: userData.userId,
+          name: `${userData.firstName} ${userData.lastName}`,
+          email: userData.email,
+          department: userData.department,
+          batchNo: userData.batchNo,
+          roles: userData.roles,
+          badges: ['newBie'],
+          questionsAsked: 0,
+          answersGiven: 0,
+          myQuestions: userData.questions,
+        };
+
+        console.log(formattedUser);
+        setUser(formattedUser);
+      } catch (err) {
+        console.error(err.message);
+        setUser(dummyUser);
+        setQuestions(dummyUser.myQuestions);
+      } finally {
         setLoading(false);
+      }
+    };
 
-        // Filter my questions
-        const myQs = data.filter((q) => q.userId === user.userId);
-
-        setUser((prev) => ({
-          ...prev,
-          myQuestions: myQs,
-          questionsAsked: myQs.length,
-        }));
-      })
-      .catch((err) => {
-        setError(err.message);
-        setLoading(false);
-      });
-  };
-
-  useEffect(() => {
-    if (user) {
-      fetchQuestions();
-    }
-  }, [user]);
+    fetchUserInfo();
+  }, [editQuestion,questionToDelete]);
 
   const handleSearchInputChange = (e) => {
     setSearchTerm(e.target.value);
@@ -188,12 +177,12 @@ function UserDashboard() {
         setSuccessMessage('Question updated successfully!');
         setEditQuestion(null);
         setSearchTerm('');
-        fetchQuestions();
       })
       .catch((err) => {
         alert('Error updating question: ' + err.message);
       });
   };
+
 
   const confirmDelete = (question) => {
     setQuestionToDelete(question);
@@ -215,7 +204,6 @@ function UserDashboard() {
         setEditQuestion(null);
         setSelectedQuestion(null);
         setSearchTerm('');
-        fetchQuestions();
       })
       .catch((err) => {
         alert('Error deleting question: ' + err.message);
@@ -230,14 +218,17 @@ function UserDashboard() {
     setSelectedQuestion(question);
   };
 
-  if (!user) return <LoadingSpinner />;
-  if (loading) return <LoadingSpinner />;
+  // if (!user) return <LoadingSpinner />;
+  // if (loading) return <LoadingSpinner />;
 
   // Use user.myQuestions if exists; else fallback to filtering questions by user
   const displayedQuestions =
     user?.myQuestions && user.myQuestions.length > 0
       ? user.myQuestions
       : questions.filter((q) => q.userId === user.userId);
+
+  const questionCount = displayedQuestions.length || 0;
+
 
   return (
     <>
@@ -269,7 +260,7 @@ function UserDashboard() {
 
             <div className="pt-2">
               <h3 className="font-semibold text-gray-800 mb-1">📊 Stats</h3>
-              <p className="text-sm">Questions Asked: {user.questionsAsked}</p>
+              <p className="text-sm">Questions Asked: {questionCount}</p>
             </div>
           </div>
 
@@ -307,11 +298,10 @@ function UserDashboard() {
                     <div
                       key={q.questionId}
                       onClick={() => handleCardClick(q)}
-                      className={`cursor-pointer p-4 rounded-xl border-l-4 shadow-sm hover:scale-[1.02] transition ${
-                        q.answers && q.answers.length > 0
+                      className={`cursor-pointer p-4 rounded-xl border-l-4 shadow-sm hover:scale-[1.02] transition ${q.answers && q.answers.length > 0
                           ? 'bg-green-50 border-green-500'
                           : 'bg-yellow-50 border-yellow-500'
-                      } relative`}
+                        } relative`}
                     >
                       <p className="font-medium text-gray-800 truncate" title={q.title}>
                         ❓ {q.title}
@@ -322,11 +312,10 @@ function UserDashboard() {
                       <p className="text-sm text-gray-600">
                         Status:{' '}
                         <span
-                          className={`font-semibold ${
-                            q.answers && q.answers.length > 0
+                          className={`font-semibold ${q.answers && q.answers.length > 0
                               ? 'text-green-600'
                               : 'text-yellow-700'
-                          }`}
+                            }`}
                         >
                           {q.status}
                         </span>
@@ -335,7 +324,7 @@ function UserDashboard() {
                         📅 {new Date(q.createdDate).toDateString()}
                       </p>
 
-                      {/* Delete button - top right */}
+                      {/* Delete button */}
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
@@ -348,7 +337,7 @@ function UserDashboard() {
                         &times;
                       </button>
 
-                      {/* Edit button - bottom right */}
+                      {/* Edit button */}
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
@@ -364,8 +353,22 @@ function UserDashboard() {
                   ))}
               </div>
             ) : (
-              <p className="text-center text-gray-500 py-6">🚫 No questions found.</p>
+              <>
+                {loading && (
+                  <p className="text-center text-gray-500 py-6">
+                    <span className="inline-block w-2 h-2 bg-gray-800 rounded-full animate-ping mx-1 ml-4"></span>
+                    <span className="inline-block w-2 h-2 bg-gray-600 rounded-full animate-ping mx-1 delay-200 ml-4"></span>
+                    <span className="inline-block w-2 h-2 bg-gray-400 rounded-full animate-ping mx-1 delay-400 ml-4"></span>
+                  </p>
+                )}
+
+                {user?.exist && displayedQuestions.length === 0 && (
+                  <p className="text-center text-red-500 py-6">🚫 No questions found.</p>
+                )}
+              </>
             )}
+
+
           </div>
         </div>
 
@@ -553,11 +556,10 @@ function UserDashboard() {
                   <p className="mb-2">
                     <strong>📌 Status:</strong>{' '}
                     <span
-                      className={`font-semibold ${
-                        selectedQuestion?.status === 'Answered'
-                          ? 'text-green-600'
-                          : 'text-yellow-700'
-                      }`}
+                      className={`font-semibold ${selectedQuestion?.status === 'Answered'
+                        ? 'text-green-600'
+                        : 'text-yellow-700'
+                        }`}
                     >
                       {selectedQuestion?.status}
                     </span>
