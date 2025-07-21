@@ -32,7 +32,7 @@ function Login() {
     setError(null);
 
     try {
-      const response = await fetch("http://16.171.144.81:5000/api/auth/signin", {
+      const response = await fetch("http://localhost:5000/api/auth/signin", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
