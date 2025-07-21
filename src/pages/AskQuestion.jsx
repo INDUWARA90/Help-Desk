@@ -121,11 +121,10 @@ function AskQuestion() {
               {availableCategories.map((cat) => (
                 <label
                   key={cat}
-                  className={`cursor-pointer px-4 py-2 rounded-full border text-sm font-medium transition ${
-                    categories.includes(cat)
-                      ? 'bg-blue-600 text-white border-blue-600'
-                      : 'bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200'
-                  }`}
+                  className={`cursor-pointer px-4 py-2 rounded-full border text-sm font-medium transition ${categories.includes(cat)
+                    ? 'bg-blue-600 text-white border-blue-600'
+                    : 'bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200'
+                    }`}
                 >
                   <input
                     type="checkbox"
@@ -164,7 +163,7 @@ function AskQuestion() {
       </div>
 
 
-      
+
       {/* Success Dialog */}
       <Dialog
         open={questionSuccess}

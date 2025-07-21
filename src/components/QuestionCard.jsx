@@ -37,7 +37,7 @@ function QuestionCard({ question }) {
 
   useEffect(() => {
     if (!question.anonymous && question.userId !== 0) {
-      fetch(`http://localhost:8080/api/users/${question.userId}`, {
+      fetch(`https://helpdesk-production-c4f9.up.railway.app/users/${question.userId}`, {
         method: 'GET',
         credentials: 'include',
       })

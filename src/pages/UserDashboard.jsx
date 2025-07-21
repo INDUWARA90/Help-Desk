@@ -39,7 +39,7 @@ const dummyUser = {
   userId: 'dummy-001',
   name: 'Guest User',
   email: 'guest@example.com',
-  badges: ['newBie','guest','tester'],
+  badges: ['newBie', 'guest', 'tester'],
   questionsAsked: 2,
   answersGiven: 0,
   myQuestions: [
@@ -308,11 +308,10 @@ function UserDashboard() {
                     <div
                       key={idx}
                       onClick={() => handleCardClick(q)}
-                      className={`cursor-pointer p-4 rounded-xl border-l-4 shadow-sm hover:scale-[1.02] transition ${
-                        q.answers && q.answers.length > 0
+                      className={`cursor-pointer p-4 rounded-xl border-l-4 shadow-sm hover:scale-[1.02] transition ${q.answers && q.answers.length > 0
                           ? 'bg-green-50 border-green-500'
                           : 'bg-yellow-50 border-yellow-500'
-                      } relative`}
+                        } relative`}
                     >
                       <p className="font-medium text-gray-800 truncate" title={q.title}>
                         ❓ {q.title}
@@ -326,11 +325,10 @@ function UserDashboard() {
                       <p className="text-sm text-gray-600">
                         Status:{' '}
                         <span
-                          className={`font-semibold ${
-                            q.answers && q.answers.length > 0
+                          className={`font-semibold ${q.answers && q.answers.length > 0
                               ? 'text-green-600'
                               : 'text-yellow-700'
-                          }`}
+                            }`}
                         >
                           {q.status}
                         </span>
@@ -557,11 +555,10 @@ function UserDashboard() {
                   <p className="mb-2">
                     <strong>📌 Status:</strong>{' '}
                     <span
-                      className={`font-semibold ${
-                        selectedQuestion?.status === 'Answered'
+                      className={`font-semibold ${selectedQuestion?.status === 'Answered'
                           ? 'text-green-600'
                           : 'text-yellow-700'
-                      }`}
+                        }`}
                     >
                       {selectedQuestion?.status}
                     </span>

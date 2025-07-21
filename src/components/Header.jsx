@@ -30,7 +30,7 @@ function Header() {
 
   const handleLogout = async () => {
     try {
-      const response = await fetch("http://localhost:8080/api/auth/signout", {
+      const response = await fetch("https://helpdesk-production-c4f9.up.railway.app/auth/signout", {
         method: "POST",
         credentials: "include",
       });
