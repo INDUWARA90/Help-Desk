@@ -45,7 +45,7 @@ function QuestionCard({ question }) {
           if (!res.ok) throw new Error('Failed to fetch user');
           return res.json();
         })
-        .then((data) => setUserInfo(data))
+        .then((data) => {setUserInfo(data)})
         .catch((err) => console.error('Error fetching user:', err));
     }
   }, [question.userId, question.anonymous]);
@@ -69,7 +69,7 @@ function QuestionCard({ question }) {
               <>
                 <span>{userInfo.firstName} {userInfo.lastName}</span>
                 <span className="text-[10px] text-gray-500">
-                  Batch {userInfo.batch} - {departmentMap[userInfo.department] || 'Unknown'}
+                  Batch {userInfo.batch} - {departmentMap[userInfo.departmentId] || 'Unknown'}
                 </span>
               </>
             )
