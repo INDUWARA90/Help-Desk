@@ -2,28 +2,26 @@ import React, { useState } from 'react';
 import Header from '../components/Header';
 import { Dialog } from '@headlessui/react';
 
-
 function AskQuestion() {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [categories, setCategories] = useState([]);
+  const [selectedCategory, setSelectedCategory] = useState(null); // 👈 Changed
   const [isAnonymous, setIsAnonymous] = useState(false);
   const [questionSuccess, setQuestionSuccess] = useState(false);
   const [questionError, setQuestionError] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false); // 👈 New
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [currentUser] = useState(
     JSON.parse(sessionStorage.getItem('currentUser'))
   );
 
+  const availableCategories = ['Timetable', 'Subjects', 'Exams', 'Labs', 'Other'];
 
-  const availableCategories = ['Timetable', 'Subjects', 'Exams', 'Labs','Other'];
-
-  const handleCategoryChange = (category) => {
-    setCategories((prev) =>
-      prev.includes(category)
-        ? prev.filter((c) => c !== category)
-        : [...prev, category]
-    );
+  const handleCategoryClick = (category) => {
+    if (selectedCategory === category) {
+      setSelectedCategory(null); // unselect if clicked again
+    } else {
+      setSelectedCategory(category);
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -36,14 +34,16 @@ function AskQuestion() {
 
     const categoryMap = {
       Timetable: 1,
-      Subjects: 2,
-      Exams: 3,
-      Labs: 4,
+      Exams: 2,
+      Labs: 3,
+      Subjects: 4,
+      Other: 5,
     };
-    const categoryId = categories.length > 0 ? categoryMap[categories[0]] : 0;
+
+    const categoryId = selectedCategory ? categoryMap[selectedCategory] : 0;
 
     if (categoryId === 0) {
-      setQuestionError('Please select at least one category.');
+      setQuestionError('Please select a category.');
       return;
     }
 
@@ -60,7 +60,7 @@ function AskQuestion() {
       answers: [],
     };
 
-    setIsSubmitting(true); // 👈 Disable button
+    setIsSubmitting(true);
 
     try {
       const response = await fetch('https://helpdesk-production-c4f9.up.railway.app/api/questions', {
@@ -76,7 +76,7 @@ function AskQuestion() {
         setQuestionSuccess(true);
         setTitle('');
         setDescription('');
-        setCategories([]);
+        setSelectedCategory(null);
         setIsAnonymous(false);
       } else {
         const errText = await response.text();
@@ -85,7 +85,7 @@ function AskQuestion() {
     } catch (error) {
       setQuestionError(`Something went wrong: ${error.message}`);
     } finally {
-      setIsSubmitting(false); // 👈 Re-enable button
+      setIsSubmitting(false);
     }
   };
 
@@ -122,26 +122,29 @@ function AskQuestion() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-2">Select Categories</label>
+            <label className="block text-sm font-medium mb-2">Select One Category</label>
             <div className="flex flex-wrap gap-2">
-              {availableCategories.map((cat) => (
-                <label
-                  key={cat}
-                  className={`cursor-pointer px-4 py-2 rounded-full border text-sm font-medium transition ${
-                    categories.includes(cat)
-                      ? 'bg-blue-600 text-white border-blue-600'
-                      : 'bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200'
-                  }`}
-                >
-                  <input
-                    type="checkbox"
-                    className="hidden"
-                    checked={categories.includes(cat)}
-                    onChange={() => handleCategoryChange(cat)}
-                  />
-                  {cat}
-                </label>
-              ))}
+              {availableCategories.map((cat) => {
+                const isSelected = selectedCategory === cat;
+                const isDisabled = selectedCategory !== null && selectedCategory !== cat;
+
+                return (
+                  <button
+                    type="button"
+                    key={cat}
+                    onClick={() => handleCategoryClick(cat)}
+                    disabled={isDisabled}
+                    className={`px-4 py-2 rounded-full text-sm font-medium transition border ${isSelected
+                        ? 'bg-blue-600 text-white border-blue-600'
+                        : isDisabled
+                          ? 'bg-gray-100 text-gray-400 border-gray-300 cursor-not-allowed'
+                          : 'bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200'
+                      }`}
+                  >
+                    {cat}
+                  </button>
+                );
+              })}
             </div>
           </div>
 
@@ -161,10 +164,9 @@ function AskQuestion() {
           <div className="text-right">
             <button
               type="submit"
-              disabled={isSubmitting} // 👈 Disable during submission
-              className={`bg-gradient-to-r from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white px-6 py-2 rounded-full text-sm font-semibold transition-shadow shadow-md hover:shadow-lg ${
-                isSubmitting ? 'opacity-50 cursor-not-allowed' : ''
-              }`}
+              disabled={isSubmitting}
+              className={`bg-gradient-to-r from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white px-6 py-2 rounded-full text-sm font-semibold transition-shadow shadow-md hover:shadow-lg ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''
+                }`}
             >
               {isSubmitting ? 'Submitting...' : 'Submit Question 🚀'}
             </button>
@@ -175,10 +177,7 @@ function AskQuestion() {
       {/* Success Dialog */}
       <Dialog
         open={questionSuccess}
-        onClose={() => {
-          setQuestionSuccess(false);
-         
-        }}
+        onClose={() => setQuestionSuccess(false)}
         className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm"
       >
         <Dialog.Panel className="w-full max-w-md bg-white rounded-3xl p-8 shadow-2xl space-y-5 text-center">
@@ -186,12 +185,10 @@ function AskQuestion() {
             Question Submitted
           </Dialog.Title>
           <p className="text-gray-700">
-            Thank you{!isAnonymous && currentUser?.firstName ? `, ${currentUser.firstName}` : ""}! Your question has been posted.
+            Thank you{!isAnonymous && currentUser?.firstName ? `, ${currentUser.firstName}` : ''}! Your question has been posted.
           </p>
           <button
-            onClick={() => {
-              setQuestionSuccess(false);
-            }}
+            onClick={() => setQuestionSuccess(false)}
             className="mt-4 px-6 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-full font-semibold shadow-lg transition-all"
           >
             Continue

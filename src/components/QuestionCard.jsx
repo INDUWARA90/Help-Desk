@@ -21,6 +21,7 @@ const categoryMap = {
   2: 'Exams',
   3: 'Labs',
   4: 'Subjects',
+  5: 'Other',
 };
 
 // Map departmentId to department name
