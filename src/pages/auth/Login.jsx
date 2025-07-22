@@ -7,7 +7,7 @@ function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [userNotFound, setUserNotFound] = useState(false);
   const [loginSuccess, setLoginSuccess] = useState(false);
   const [loggedInUser, setLoggedInUser] = useState(null);
@@ -19,19 +19,19 @@ function Login() {
   async function handleSubmit(e) {
     e.preventDefault();
 
-    document.cookie
-      .split(";")
-      .forEach((cookie) => {
-        const eqPos = cookie.indexOf("=");
-        const name = eqPos > -1 ? cookie.substr(0, eqPos) : cookie;
-        document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/";
-      });
-
-
+    setIsLoggingIn(true);
     setUserNotFound(false);
     setError(null);
 
     try {
+      document.cookie
+        .split(";")
+        .forEach((cookie) => {
+          const eqPos = cookie.indexOf("=");
+          const name = eqPos > -1 ? cookie.substr(0, eqPos) : cookie;
+          document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/";
+        });
+
       const response = await fetch("https://helpdesk-production-c4f9.up.railway.app/api/auth/signin", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -54,6 +54,8 @@ function Login() {
     } catch (err) {
       console.error("Login error:", err);
       setError("Network error. Please try again later.");
+    } finally {
+      setIsLoggingIn(false);
     }
   }
 
@@ -123,13 +125,14 @@ function Login() {
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center text-sm text-gray-700 gap-3">
               <Link to="/reset-password" className="hover:underline text-rose-500">Forgot password?</Link>
             </div>
-
             <button
               type='submit'
+              disabled={isLoggingIn}
               className="w-full bg-rose-500 hover:bg-rose-600 text-white py-3 rounded-xl text-lg font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Login
+              {isLoggingIn ? "Logging in..." : "Login"}
             </button>
+
 
             <p className="text-center text-sm pt-3 text-gray-600">
               Not a member?{' '}

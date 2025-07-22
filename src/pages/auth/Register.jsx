@@ -12,7 +12,7 @@ function Register() {
   const [role, setRole] = useState("");
   const [year, setYear] = useState("");
   const [gender, setGender] = useState("");
-
+  const [isRegistering, setIsRegistering] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
   const [isOpen, setIsOpen] = useState(false); //Success Modal
@@ -26,10 +26,14 @@ function Register() {
   async function handleSubmit(e) {
     e.preventDefault();
 
+    setIsRegistering(true);  // Start loading
+    setError(null);
+
     const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{6,}$/;
 
     if (!passwordRegex.test(password)) {
       setIsPasswordCorrect(true);
+      setIsRegistering(false); // Stop loading if password is invalid
       return;
     }
 
@@ -67,6 +71,8 @@ function Register() {
     } catch (err) {
       console.error("Error:", err);
       setError("Network or server error. Please try again later.");
+    } finally {
+      setIsRegistering(false);  // Always stop loading
     }
   }
 
@@ -209,14 +215,16 @@ function Register() {
                     </svg>
                   )}
                 </button>
+                
               </div>
-
               <button
                 type="submit"
-                className="w-full py-3 rounded-xl bg-rose-500 hover:bg-rose-600 text-white font-semibold transition"
+                disabled={isRegistering}
+                className="w-full bg-rose-500 hover:bg-rose-600 text-white py-3 rounded-xl text-lg font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Sign Up
+                {isRegistering ? "Registering..." : "Register"}
               </button>
+
             </form>
           </div>
 

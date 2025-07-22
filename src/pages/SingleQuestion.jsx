@@ -8,26 +8,9 @@ function LoadingSpinner() {
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-white">
       <div className="flex items-center space-x-3">
-        <svg
-          className="animate-spin h-10 w-10 text-rose-500"
-          xmlns="http://www.w3.org/2000/svg"
-          fill="none"
-          viewBox="0 0 24 24"
-          aria-label="Loading"
-        >
-          <circle
-            className="opacity-25"
-            cx="12"
-            cy="12"
-            r="10"
-            stroke="currentColor"
-            strokeWidth="4"
-          ></circle>
-          <path
-            className="opacity-75"
-            fill="currentColor"
-            d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
-          ></path>
+        <svg className="animate-spin h-10 w-10 text-rose-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
         </svg>
         <span className="text-rose-600 font-semibold text-lg">Loading question...</span>
       </div>
@@ -42,19 +25,47 @@ function SingleQuestionPage() {
   const [answer, setAnswer] = useState('');
   const [isAnonymous, setIsAnonymous] = useState(false);
   const [showThankYou, setShowThankYou] = useState(false);
+  const [userMap, setUserMap] = useState({}); // 🟡 Stores userId => userObject
 
   const currentUser = JSON.parse(sessionStorage.getItem('currentUser'));
 
+  // 🟡 Fetch user info for all answer authors
+  const fetchUserNames = async (answers) => {
+    const ids = [...new Set(answers.map((a) => a.userId))];
+    const promises = ids.map((uid) =>
+      fetch(`https://helpdesk-production-c4f9.up.railway.app/api/users/${uid}`, {
+        credentials: 'include',
+      }).then(res => res.json())
+        .catch(() => null)
+    );
+
+    const results = await Promise.all(promises);
+    const map = {};
+    results.forEach((user, index) => {
+      if (user) {
+        map[ids[index]] = user;
+      }
+    });
+    setUserMap(map);
+  };
+
+  // 🟡 Fetch question and users
   useEffect(() => {
-    fetch(`https://helpdesk-production-c4f9.up.railway.app/api/questions/${id}`, {
-      credentials: 'include',
-    })
-      .then(res => res.json())
-      .then(data => setQuestion(data))
-      .catch(err => console.error('Error fetching question:', err));
+    const fetchData = async () => {
+      try {
+        const res = await fetch(`https://helpdesk-production-c4f9.up.railway.app/api/questions/${id}`, {
+          credentials: 'include',
+        });
+        const data = await res.json();
+        setQuestion(data);
+        await fetchUserNames(data.answers || []);
+      } catch (err) {
+        console.error('Error fetching data:', err);
+      }
+    };
+    fetchData();
   }, [id]);
 
-  // Async submit handler that returns a promise for modal's await
   const handleSubmit = async () => {
     if (!currentUser) {
       alert('Please log in to submit a question.');
@@ -64,6 +75,7 @@ function SingleQuestionPage() {
     const newAnswer = {
       answerId: 0,
       description: answer,
+      anonymous: isAnonymous,
       createdAt: new Date().toISOString(),
       vote: 0,
       userId: currentUser.userId,
@@ -81,18 +93,16 @@ function SingleQuestionPage() {
 
     await res.json();
 
-    // Re-fetch updated question
+    // Refresh question & users
     const updatedRes = await fetch(`https://helpdesk-production-c4f9.up.railway.app/api/questions/${id}`, {
       credentials: 'include',
     });
     const updatedQuestion = await updatedRes.json();
     setQuestion(updatedQuestion);
+    await fetchUserNames(updatedQuestion.answers || []);
 
-    // Reset form fields
     setAnswer('');
     setIsAnonymous(false);
-
-    // Show ThankYou message briefly
     setShowThankYou(true);
     setTimeout(() => setShowThankYou(false), 1500);
   };
@@ -116,7 +126,7 @@ function SingleQuestionPage() {
 
         <div className="flex justify-center px-6 md:px-0 py-1">
           <div className="bg-white/70 backdrop-blur-lg rounded-3xl shadow-2xl p-8 w-full md:w-1/2 space-y-8 border border-rose-100 transition hover:shadow-[0_0_20px_rgba(244,63,94,0.3)]">
-            {/* Question Header */}
+            {/* Header */}
             <div className="flex items-center gap-4">
               <div className="w-14 h-14 bg-rose-500 text-white rounded-full flex items-center justify-center text-lg font-bold shadow-inner">
                 {question.anonymous ? '?' : (question.userName?.charAt(0).toUpperCase() || 'U')}
@@ -134,10 +144,7 @@ function SingleQuestionPage() {
               <div>
                 <p className="font-medium text-gray-600">Category:</p>
                 <p className="text-rose-600 font-semibold text-base">
-                  #{question.categoryId === 1 ? 'Timetable' :
-                    question.categoryId === 2 ? 'Exams' :
-                      question.categoryId === 3 ? 'Labs' :
-                        question.categoryId === 4 ? 'Subjects' : 'General'}
+                  #{['Timetable', 'Exams', 'Labs', 'Subjects'][question.categoryId - 1] || 'General'}
                 </p>
               </div>
 
@@ -163,7 +170,11 @@ function SingleQuestionPage() {
                   question.answers.map((ans, idx) => (
                     <div key={idx} className="border-l-4 border-rose-400 pl-4">
                       <p className="font-medium text-gray-800">
-                        {ans.anonymous ? 'Anonymous' : ans.userName || 'Unknown User'}
+                        {ans.anonymous
+                          ? 'Anonymous'
+                          : userMap[ans.userId]
+                            ? `${userMap[ans.userId].firstName} ${userMap[ans.userId].lastName}`
+                            : 'Unknown User'}
                       </p>
                       <p className="italic text-gray-700 text-base">"{ans.description}"</p>
                       <p className="text-xs text-gray-500 mt-1">
@@ -197,7 +208,7 @@ function SingleQuestionPage() {
             isAnonymous={isAnonymous}
             setIsAnonymous={setIsAnonymous}
             onClose={() => setIsModalOpen(false)}
-            onSubmit={handleSubmit}  // Async submit
+            onSubmit={handleSubmit}
           />
         )}
 

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import Header from '../components/Header';
 import { Dialog } from '@headlessui/react';
-import { useNavigate } from 'react-router-dom';
+
 
 function AskQuestion() {
   const [title, setTitle] = useState('');
@@ -15,7 +15,6 @@ function AskQuestion() {
     JSON.parse(sessionStorage.getItem('currentUser'))
   );
 
-  const navigate = useNavigate();
 
   const availableCategories = ['Timetable', 'Subjects', 'Exams', 'Labs','Other'];
 
@@ -178,7 +177,7 @@ function AskQuestion() {
         open={questionSuccess}
         onClose={() => {
           setQuestionSuccess(false);
-          navigate('/all-questions');
+         
         }}
         className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm"
       >
@@ -192,7 +191,6 @@ function AskQuestion() {
           <button
             onClick={() => {
               setQuestionSuccess(false);
-              navigate('/all-questions');
             }}
             className="mt-4 px-6 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-full font-semibold shadow-lg transition-all"
           >

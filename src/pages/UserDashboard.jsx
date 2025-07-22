@@ -87,6 +87,8 @@ function UserDashboard() {
   const [questions, setQuestions] = useState([]); // all fetched questions
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [deleting, setDeleting] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   // Delete confirmation modal state
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -127,8 +129,6 @@ function UserDashboard() {
           answersGiven: 0,
           myQuestions: userData.questions,
         };
-
-        console.log(formattedUser);
         setUser(formattedUser);
       } catch (err) {
         console.error(err.message);
@@ -140,7 +140,7 @@ function UserDashboard() {
     };
 
     fetchUserInfo();
-  }, [editQuestion,questionToDelete]);
+  }, [editQuestion, questionToDelete]);
 
   const handleSearchInputChange = (e) => {
     setSearchTerm(e.target.value);
@@ -154,6 +154,8 @@ function UserDashboard() {
 
   const handleSave = () => {
     if (!editQuestion) return;
+
+    setSaving(true); // start saving
 
     const updatedQuestion = {
       ...editQuestion,
@@ -180,6 +182,9 @@ function UserDashboard() {
       })
       .catch((err) => {
         alert('Error updating question: ' + err.message);
+      })
+      .finally(() => {
+        setSaving(false); // finish saving
       });
   };
 
@@ -191,6 +196,8 @@ function UserDashboard() {
 
   const performDelete = () => {
     if (!questionToDelete) return;
+
+    setDeleting(true); // Start loading
 
     fetch(`https://helpdesk-production-c4f9.up.railway.app/api/questions/${questionToDelete.questionId}`, {
       method: 'DELETE',
@@ -211,6 +218,7 @@ function UserDashboard() {
       .finally(() => {
         setIsDeleteModalOpen(false);
         setQuestionToDelete(null);
+        setDeleting(false); // End loading
       });
   };
 
@@ -299,8 +307,8 @@ function UserDashboard() {
                       key={q.questionId}
                       onClick={() => handleCardClick(q)}
                       className={`cursor-pointer p-4 rounded-xl border-l-4 shadow-sm hover:scale-[1.02] transition ${q.answers && q.answers.length > 0
-                          ? 'bg-green-50 border-green-500'
-                          : 'bg-yellow-50 border-yellow-500'
+                        ? 'bg-green-50 border-green-500'
+                        : 'bg-yellow-50 border-yellow-500'
                         } relative`}
                     >
                       <p className="font-medium text-gray-800 truncate" title={q.title}>
@@ -313,8 +321,8 @@ function UserDashboard() {
                         Status:{' '}
                         <span
                           className={`font-semibold ${q.answers && q.answers.length > 0
-                              ? 'text-green-600'
-                              : 'text-yellow-700'
+                            ? 'text-green-600'
+                            : 'text-yellow-700'
                             }`}
                         >
                           {q.status}
@@ -416,11 +424,13 @@ function UserDashboard() {
                     </button>
                     <button
                       type="button"
-                      className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+                      className={`px-4 py-2 rounded text-white ${deleting ? 'bg-red-400 cursor-not-allowed' : 'bg-red-600 hover:bg-red-700'}`}
                       onClick={performDelete}
+                      disabled={deleting}
                     >
-                      Delete
+                      {deleting ? 'Deleting...' : 'Delete'}
                     </button>
+
                   </div>
                 </Dialog.Panel>
               </Transition.Child>
@@ -476,10 +486,6 @@ function UserDashboard() {
                       onChange={(e) => setEditedDescription(e.target.value)}
                     />
                   </div>
-
-                  <p className="text-sm text-gray-700 mb-4">
-                    Status: {editQuestion?.status}
-                  </p>
                   <p className="text-xs text-gray-500 mb-6">
                     📅 {editQuestion && new Date(editQuestion.createdDate).toDateString()}
                   </p>
@@ -499,11 +505,13 @@ function UserDashboard() {
                         Cancel
                       </button>
                       <button
-                        className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded"
+                        className={`bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed`}
                         onClick={handleSave}
+                        disabled={saving}
                       >
-                        Save
+                        {saving ? 'Saving...' : 'Save'}
                       </button>
+
                     </div>
                   </div>
                 </Dialog.Panel>

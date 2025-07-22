@@ -7,7 +7,7 @@ function ResetPassword() {
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
   const [newPassword, setNewPassword] = useState("");
-
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [emailSent, setEmailSent] = useState(false); // NEW: track if email sent
   const [isSuccessOpen, setIsSuccessOpen] = useState(false);
@@ -18,6 +18,8 @@ function ResetPassword() {
   // Step 1: Send reset code to email
   async function handleSendCode(e) {
     e.preventDefault();
+    setIsLoading(true);
+    setError("");
 
     try {
       const response = await fetch("https://helpdesk-production-c4f9.up.railway.app/api/auth/resetcode", {
@@ -28,7 +30,7 @@ function ResetPassword() {
       });
 
       if (response.status === 200) {
-        setEmailSent(true);  // Show "check your email" message
+        setEmailSent(true);
         setStep(2);
         setError("");
       } else if (response.status === 404) {
@@ -41,23 +43,27 @@ function ResetPassword() {
     } catch (err) {
       console.error("Error:", err);
       setError("Network error. Please try again later.");
+    } finally {
+      setIsLoading(false);
     }
   }
 
   // Step 2: Reset password using code
   async function handleResetPassword(e) {
     e.preventDefault();
+    setIsLoading(true);
+    setError("");
 
     if (newPassword.trim().length < 6) {
       setError("Password must be at least 6 characters long.");
+      setIsLoading(false);
       return;
     }
 
     const strongPasswordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{6,}$/;
     if (!strongPasswordRegex.test(newPassword)) {
-      setError(
-        "Password must include uppercase, lowercase, number, and special character."
-      );
+      setError("Password must include uppercase, lowercase, number, and special character.");
+      setIsLoading(false);
       return;
     }
 
@@ -68,15 +74,12 @@ function ResetPassword() {
     };
 
     try {
-      const response = await fetch(
-        "https://helpdesk-production-c4f9.up.railway.app/api/auth/resetpassword",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify(payload),
-        }
-      );
+      const response = await fetch("https://helpdesk-production-c4f9.up.railway.app/api/auth/resetpassword", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(payload),
+      });
 
       if (response.status === 200) {
         setError("");
@@ -91,6 +94,8 @@ function ResetPassword() {
     } catch (err) {
       console.error("Error:", err);
       setError("Network error. Please try again later.");
+    } finally {
+      setIsLoading(false);
     }
   }
 
@@ -158,9 +163,16 @@ function ResetPassword() {
 
           <button
             type="submit"
-            className="w-full py-3 rounded-lg bg-rose-500 hover:bg-rose-600 text-white font-semibold transition duration-200"
+            disabled={isLoading}
+            className="w-full py-3 rounded-lg bg-rose-500 hover:bg-rose-600 text-white font-semibold transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {step === 1 ? "Send Code" : "Reset Password"}
+            {isLoading
+              ? step === 1
+                ? "Sending..."
+                : "Resetting..."
+              : step === 1
+                ? "Send Code"
+                : "Reset Password"}
           </button>
 
           {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
