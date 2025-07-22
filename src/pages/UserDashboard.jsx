@@ -1,6 +1,6 @@
 /* eslint-disable no-unused-vars */
 import React, { useState, useEffect, Fragment } from 'react';
-import { Link } from 'react-router-dom';
+import { data, Link } from 'react-router-dom';
 import { Dialog, Transition } from '@headlessui/react';
 import Header from '../components/Header';
 
@@ -155,7 +155,7 @@ function UserDashboard() {
   const handleSave = () => {
     if (!editQuestion) return;
 
-    setSaving(true);
+    setSaving(true); // start saving
 
     const updatedQuestion = {
       ...editQuestion,
@@ -184,9 +184,10 @@ function UserDashboard() {
         alert('Error updating question: ' + err.message);
       })
       .finally(() => {
-        setSaving(false);
+        setSaving(false); // finish saving
       });
   };
+
 
   const confirmDelete = (question) => {
     setQuestionToDelete(question);
@@ -196,7 +197,7 @@ function UserDashboard() {
   const performDelete = () => {
     if (!questionToDelete) return;
 
-    setDeleting(true);
+    setDeleting(true); // Start loading
 
     fetch(`https://helpdesk-production-c4f9.up.railway.app/api/questions/${questionToDelete.questionId}`, {
       method: 'DELETE',
@@ -217,7 +218,7 @@ function UserDashboard() {
       .finally(() => {
         setIsDeleteModalOpen(false);
         setQuestionToDelete(null);
-        setDeleting(false);
+        setDeleting(false); // End loading
       });
   };
 
@@ -225,6 +226,10 @@ function UserDashboard() {
     setSelectedQuestion(question);
   };
 
+  // if (!user) return <LoadingSpinner />;
+  // if (loading) return <LoadingSpinner />;
+
+  // Use user.myQuestions if exists; else fallback to filtering questions by user
   const displayedQuestions =
     user?.myQuestions && user.myQuestions.length > 0
       ? user.myQuestions
@@ -232,28 +237,27 @@ function UserDashboard() {
 
   const questionCount = displayedQuestions.length || 0;
 
-  if (loading) return <LoadingSpinner />;
 
   return (
     <>
       <Header />
       <div className="min-h-screen bg-gray-100 pt-24 px-4 pb-10">
-        <div className="max-w-7xl mx-auto space-y-10">
+        <div className="max-w-6xl mx-auto space-y-10">
           {/* Profile */}
           <div className="bg-white rounded-xl p-6 shadow-md space-y-6">
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
-              <div className="w-16 h-16 bg-yellow-400 text-white rounded-full flex items-center justify-center text-2xl font-bold select-none">
+              <div className="w-16 h-16 bg-yellow-400 text-white rounded-full flex items-center justify-center text-2xl font-bold">
                 👤
               </div>
-              <div className="min-w-0">
-                <p className="text-xl font-semibold truncate">{user.name}</p>
-                <p className="text-sm text-gray-600 truncate">📧 {user.email}</p>
+              <div>
+                <p className="text-xl font-semibold">{user.name}</p>
+                <p className="text-sm text-gray-600">📧 {user.email}</p>
                 <p className="mt-2 text-sm text-gray-700">
                   🏅 Badges:{' '}
                   {user.badges.map((badge, idx) => (
                     <span
                       key={idx}
-                      className="bg-purple-100 text-purple-800 px-2 py-1 rounded-full text-xs mr-2 inline-block"
+                      className="bg-purple-100 text-purple-800 px-2 py-1 rounded-full text-xs mr-2"
                     >
                       {badge}
                     </span>
@@ -281,13 +285,14 @@ function UserDashboard() {
                   onChange={handleSearchInputChange}
                 />
                 <Link to="/ask-question">
-                  <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-full text-sm transition w-full sm:w-auto">
+                  <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-full text-sm transition">
                     ➕ Ask New Question
                   </button>
                 </Link>
               </div>
             </div>
 
+            {/* Questions List or No Data */}
             {displayedQuestions.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {displayedQuestions
@@ -301,30 +306,24 @@ function UserDashboard() {
                     <div
                       key={q.questionId}
                       onClick={() => handleCardClick(q)}
-                      className={`cursor-pointer p-4 rounded-xl border-l-4 shadow-sm hover:scale-[1.02] transition duration-150 ease-in-out
-                        ${q.answers && q.answers.length > 0
-                          ? 'bg-green-50 border-green-500'
-                          : 'bg-yellow-50 border-yellow-500'
+                      className={`cursor-pointer p-4 rounded-xl border-l-4 shadow-sm hover:scale-[1.02] transition ${q.answers && q.answers.length > 0
+                        ? 'bg-green-50 border-green-500'
+                        : 'bg-yellow-50 border-yellow-500'
                         } relative`}
                     >
-                      <p
-                        className="font-medium text-gray-800 truncate"
-                        title={q.title}
-                      >
+                      <p className="font-medium text-gray-800 truncate" title={q.title}>
                         ❓ {q.title}
                       </p>
-                      <p
-                        className="text-sm text-gray-600 truncate"
-                        title={q.description}
-                      >
+                      <p className="text-sm text-gray-600 truncate" title={q.description}>
                         📄 {q.description || 'No description'}
                       </p>
                       <p className="text-sm text-gray-600">
                         Status:{' '}
                         <span
-                          className={`font-semibold ${
-                            q.answers && q.answers.length > 0 ? 'text-green-600' : 'text-yellow-700'
-                          }`}
+                          className={`font-semibold ${q.answers && q.answers.length > 0
+                            ? 'text-green-600'
+                            : 'text-yellow-700'
+                            }`}
                         >
                           {q.status}
                         </span>
@@ -376,6 +375,8 @@ function UserDashboard() {
                 )}
               </>
             )}
+
+
           </div>
         </div>
 
@@ -423,14 +424,13 @@ function UserDashboard() {
                     </button>
                     <button
                       type="button"
-                      className={`px-4 py-2 rounded text-white ${
-                        deleting ? 'bg-red-400 cursor-not-allowed' : 'bg-red-600 hover:bg-red-700'
-                      }`}
+                      className={`px-4 py-2 rounded text-white ${deleting ? 'bg-red-400 cursor-not-allowed' : 'bg-red-600 hover:bg-red-700'}`}
                       onClick={performDelete}
                       disabled={deleting}
                     >
                       {deleting ? 'Deleting...' : 'Delete'}
                     </button>
+
                   </div>
                 </Dialog.Panel>
               </Transition.Child>
@@ -490,28 +490,29 @@ function UserDashboard() {
                     📅 {editQuestion && new Date(editQuestion.createdDate).toDateString()}
                   </p>
 
-                  <div className="flex justify-between gap-2 flex-wrap">
+                  <div className="flex justify-between gap-2">
                     <button
-                      className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded w-full sm:w-auto"
+                      className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded"
                       onClick={() => confirmDelete(editQuestion)}
                     >
                       Delete
                     </button>
-                    <button
-                      disabled={saving}
-                      className={`bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded w-full sm:w-auto ${
-                        saving ? 'cursor-not-allowed opacity-70' : ''
-                      }`}
-                      onClick={handleSave}
-                    >
-                      {saving ? 'Saving...' : 'Save Changes'}
-                    </button>
-                    <button
-                      className="bg-gray-300 hover:bg-gray-400 px-4 py-2 rounded w-full sm:w-auto"
-                      onClick={() => setEditQuestion(null)}
-                    >
-                      Cancel
-                    </button>
+                    <div className="flex gap-2">
+                      <button
+                        className="bg-gray-400 hover:bg-gray-500 text-white px-4 py-2 rounded"
+                        onClick={() => setEditQuestion(null)}
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        className={`bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed`}
+                        onClick={handleSave}
+                        disabled={saving}
+                      >
+                        {saving ? 'Saving...' : 'Save'}
+                      </button>
+
+                    </div>
                   </div>
                 </Dialog.Panel>
               </Transition.Child>
@@ -519,19 +520,108 @@ function UserDashboard() {
           </Dialog>
         </Transition>
 
-        {/* Success Message */}
-        {successMessage && (
-          <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-green-600 text-white px-6 py-3 rounded shadow-md z-50">
-            {successMessage}
-            <button
-              className="ml-4 font-bold hover:underline"
-              onClick={() => setSuccessMessage(null)}
-              aria-label="Dismiss success message"
-            >
-              ✖
-            </button>
-          </div>
-        )}
+        {/* View Answer Modal */}
+        <Transition appear show={!!selectedQuestion} as={Fragment}>
+          <Dialog
+            as="div"
+            className="fixed inset-0 z-50 overflow-y-auto"
+            onClose={() => setSelectedQuestion(null)}
+          >
+            <div className="min-h-screen px-4 text-center bg-black/30 backdrop-blur-sm">
+              <span className="inline-block h-screen align-middle" aria-hidden="true">
+                &#8203;
+              </span>
+
+              <Transition.Child
+                as={Fragment}
+                enter="ease-out duration-300"
+                enterFrom="opacity-0 scale-95"
+                enterTo="opacity-100 scale-100"
+                leave="ease-in duration-200"
+                leaveFrom="opacity-100 scale-100"
+                leaveTo="opacity-0 scale-95"
+              >
+                <Dialog.Panel className="inline-block w-full max-w-lg p-6 my-8 overflow-hidden text-left align-middle transition-all transform bg-white rounded-xl shadow-xl">
+                  <Dialog.Title
+                    as="h3"
+                    className="text-xl font-semibold leading-6 text-gray-900 mb-4"
+                  >
+                    📖 Question Details
+                  </Dialog.Title>
+
+                  <p className="mb-2">
+                    <strong>❓ Title:</strong> {selectedQuestion?.title}
+                  </p>
+                  <p className="mb-2">
+                    <strong>📄 Description:</strong>{' '}
+                    {selectedQuestion?.description || 'No description'}
+                  </p>
+                  <p className="mb-2">
+                    <strong>📅 Date:</strong>{' '}
+                    {selectedQuestion &&
+                      new Date(selectedQuestion.createdDate).toDateString()}
+                  </p>
+                  <p className="mb-2">
+                    <strong>📌 Status:</strong>{' '}
+                    <span
+                      className={`font-semibold ${selectedQuestion?.status === 'Answered'
+                        ? 'text-green-600'
+                        : 'text-yellow-700'
+                        }`}
+                    >
+                      {selectedQuestion?.status}
+                    </span>
+                  </p>
+
+                  {selectedQuestion?.answers && selectedQuestion.answers.length > 0 ? (
+                    <div className="mt-4">
+                      <h4 className="text-md font-semibold text-gray-800 mb-2">
+                        ✅ Answers:
+                      </h4>
+                      <ul className="space-y-3 text-sm text-gray-700">
+                        {selectedQuestion.answers.map((answer, index) => (
+                          <li
+                            key={answer.answerId || index}
+                            className="bg-gray-50 border rounded-lg p-3"
+                          >
+                            <p>{answer.description}</p>
+                            <div className="text-xs text-gray-500 mt-1">
+                              Posted on:{' '}
+                              {new Date(answer.createdAt).toLocaleDateString()}
+                            </div>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ) : (
+                    <p className="text-sm text-red-500 mt-4">
+                      No answers provided yet.
+                    </p>
+                  )}
+                </Dialog.Panel>
+              </Transition.Child>
+            </div>
+          </Dialog>
+        </Transition>
+
+        {/* Success Message Dialog */}
+        <Transition appear show={!!successMessage} as={Fragment}>
+          <Dialog
+            as="div"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm"
+            onClose={() => setSuccessMessage(null)}
+          >
+            <Dialog.Panel className="w-full max-w-md bg-white rounded-3xl p-8 shadow-2xl space-y-5 text-center">
+              <p className="text-gray-700">{successMessage}</p>
+              <button
+                onClick={() => setSuccessMessage(null)}
+                className="mt-4 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded"
+              >
+                Close
+              </button>
+            </Dialog.Panel>
+          </Dialog>
+        </Transition>
       </div>
     </>
   );
