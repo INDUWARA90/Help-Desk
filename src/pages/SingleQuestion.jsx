@@ -25,17 +25,27 @@ function SingleQuestionPage() {
   const [answer, setAnswer] = useState('');
   const [isAnonymous, setIsAnonymous] = useState(false);
   const [showThankYou, setShowThankYou] = useState(false);
-  const [userMap, setUserMap] = useState({}); // 🟡 Stores userId => userObject
+  const [userMap, setUserMap] = useState({});
 
   const currentUser = JSON.parse(sessionStorage.getItem('currentUser'));
+  const token = localStorage.getItem('authToken');
 
-  // 🟡 Fetch user info for all answer authors
+  // Helper function to build headers for fetch
+  const getHeaders = (isJson = false) => {
+    const headers = {};
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+    if (isJson) headers['Content-Type'] = 'application/json';
+    return headers;
+  };
+
+  // Fetch user info for all answer authors
   const fetchUserNames = async (answers) => {
     const ids = [...new Set(answers.map((a) => a.userId))];
     const promises = ids.map((uid) =>
       fetch(`https://helpdesk-production-c4f9.up.railway.app/api/users/${uid}`, {
-        credentials: 'include',
-      }).then(res => res.json())
+        headers: getHeaders(),
+      })
+        .then((res) => (res.ok ? res.json() : null))
         .catch(() => null)
     );
 
@@ -49,13 +59,14 @@ function SingleQuestionPage() {
     setUserMap(map);
   };
 
-  // 🟡 Fetch question and users
+  // Fetch question and users
   useEffect(() => {
     const fetchData = async () => {
       try {
         const res = await fetch(`https://helpdesk-production-c4f9.up.railway.app/api/questions/${id}`, {
-          credentials: 'include',
+          headers: getHeaders(),
         });
+        if (!res.ok) throw new Error('Failed to fetch question');
         const data = await res.json();
         setQuestion(data);
         await fetchUserNames(data.answers || []);
@@ -69,7 +80,7 @@ function SingleQuestionPage() {
   const handleSubmit = async () => {
     if (!currentUser) {
       alert('Please log in to submit a question.');
-      throw new Error('User not logged in');
+      return;
     }
 
     const newAnswer = {
@@ -82,29 +93,30 @@ function SingleQuestionPage() {
       questionId: parseInt(id),
     };
 
-    const res = await fetch('https://helpdesk-production-c4f9.up.railway.app/api/answers', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify(newAnswer),
-    });
+    try {
+      const res = await fetch('https://helpdesk-production-c4f9.up.railway.app/api/answers', {
+        method: 'POST',
+        headers: getHeaders(true),
+        body: JSON.stringify(newAnswer),
+      });
 
-    if (!res.ok) throw new Error('Failed to submit answer');
+      if (!res.ok) throw new Error('Failed to submit answer');
+      await res.json();
 
-    await res.json();
+      const updatedRes = await fetch(`https://helpdesk-production-c4f9.up.railway.app/api/questions/${id}`, {
+        headers: getHeaders(),
+      });
+      const updatedQuestion = await updatedRes.json();
+      setQuestion(updatedQuestion);
+      await fetchUserNames(updatedQuestion.answers || []);
 
-    // Refresh question & users
-    const updatedRes = await fetch(`https://helpdesk-production-c4f9.up.railway.app/api/questions/${id}`, {
-      credentials: 'include',
-    });
-    const updatedQuestion = await updatedRes.json();
-    setQuestion(updatedQuestion);
-    await fetchUserNames(updatedQuestion.answers || []);
-
-    setAnswer('');
-    setIsAnonymous(false);
-    setShowThankYou(true);
-    setTimeout(() => setShowThankYou(false), 1500);
+      setAnswer('');
+      setIsAnonymous(false);
+      setShowThankYou(true);
+      setTimeout(() => setShowThankYou(false), 1500);
+    } catch (error) {
+      console.error('Error submitting answer:', error);
+    }
   };
 
   if (!question) return <LoadingSpinner />;
@@ -152,10 +164,11 @@ function SingleQuestionPage() {
                 <p>📅 Posted: {new Date(question.createdDate).toLocaleDateString()}</p>
                 <p className="font-semibold flex items-center">
                   Status:
-                  <span className={`ml-3 inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold shadow-md ${question.answers.length > 0
-                    ? 'bg-green-100 text-green-700'
-                    : 'bg-yellow-100 text-yellow-700'
-                    }`}>
+                  <span
+                    className={`ml-3 inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold shadow-md ${
+                      question.answers.length > 0 ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'
+                    }`}
+                  >
                     {question.answers.length > 0 ? '✅ Answered' : '❓ Unanswered'}
                   </span>
                 </p>
@@ -173,13 +186,11 @@ function SingleQuestionPage() {
                         {ans.anonymous
                           ? 'Anonymous'
                           : userMap[ans.userId]
-                            ? `${userMap[ans.userId].firstName} ${userMap[ans.userId].lastName}`
-                            : 'Unknown User'}
+                          ? `${userMap[ans.userId].firstName} ${userMap[ans.userId].lastName}`
+                          : 'Unknown User'}
                       </p>
                       <p className="italic text-gray-700 text-base">"{ans.description}"</p>
-                      <p className="text-xs text-gray-500 mt-1">
-                        🕒 {new Date(ans.createdAt).toLocaleDateString()}
-                      </p>
+                      <p className="text-xs text-gray-500 mt-1">🕒 {new Date(ans.createdAt).toLocaleDateString()}</p>
                     </div>
                   ))
                 ) : (

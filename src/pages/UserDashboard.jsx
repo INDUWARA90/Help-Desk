@@ -205,7 +205,7 @@ function UserDashboard() {
       setSelectedQuestion(null);
       setSearchTerm('');
     } catch (err) {
-      alert('Error deleting question: ' + err.message);
+      console.log('Error deleting question: ' + err.message);
     } finally {
       setIsDeleteModalOpen(false);
       setQuestionToDelete(null);
