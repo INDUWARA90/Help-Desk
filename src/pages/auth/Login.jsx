@@ -22,13 +22,13 @@ function Login() {
 
     try {
       
-      // document.cookie
-      //   .split(";")
-      //   .forEach((cookie) => {
-      //     const eqPos = cookie.indexOf("=");
-      //     const name = eqPos > -1 ? cookie.substr(0, eqPos) : cookie;
-      //     document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/";
-      //   });
+      document.cookie
+        .split(";")
+        .forEach((cookie) => {
+          const eqPos = cookie.indexOf("=");
+          const name = eqPos > -1 ? cookie.substr(0, eqPos) : cookie;
+          document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/";
+        });
 
       const response = await fetch("https://helpdesk-production-c4f9.up.railway.app/api/auth/signin", {
         method: "POST",
