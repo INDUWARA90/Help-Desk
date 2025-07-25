@@ -30,16 +30,26 @@ function Header() {
 
   const handleLogout = async () => {
     try {
-      const response = await fetch("https://helpdesk-production-c4f9.up.railway.app/api/auth/signout", {
-        method: "POST",
-        credentials: "include",
-      });
+      const response = await fetch(
+        "https://helpdesk-production-c4f9.up.railway.app/api/auth/signout",
+        {
+          method: "POST",
+          credentials: "include",
+        }
+      );
 
       if (response.ok) {
+        // Clear tokens and user info from storage
+        localStorage.removeItem("authToken");
         sessionStorage.removeItem("currentUser");
+
+        // Update app state
         setIsLoggedIn(false);
         setLogoutSuccess(true);
-        navigate("/");
+        setError(null);
+
+        // Navigate to login page
+        navigate("/login");
       } else {
         const errorData = await response.json();
         setError("Logout failed: " + (errorData.message || "Unknown error"));
@@ -53,6 +63,7 @@ function Header() {
   const handleLogin = () => {
     navigate("/login");
   };
+
 
   return (
     <>
@@ -102,9 +113,8 @@ function Header() {
 
       {/* Mobile Slide-In Menu */}
       <div
-        className={`md:hidden fixed top-0 right-0 h-full w-64 bg-gradient-to-b from-rose-600 to-pink-500 p-6 transform transition-transform duration-300 ease-in-out shadow-2xl z-40 ${
-          menuOpen ? "translate-x-0" : "translate-x-full"
-        }`}
+        className={`md:hidden fixed top-0 right-0 h-full w-64 bg-gradient-to-b from-rose-600 to-pink-500 p-6 transform transition-transform duration-300 ease-in-out shadow-2xl z-40 ${menuOpen ? "translate-x-0" : "translate-x-full"
+          }`}
       >
         <button onClick={toggleMenu} className="absolute top-4 right-4 text-white">
           <X size={28} />
@@ -186,11 +196,10 @@ function NavLink({ label, to, onClick, mobile, icon }) {
     <Link
       to={to}
       onClick={onClick}
-      className={`${
-        mobile
+      className={`${mobile
           ? "flex items-center gap-2 px-3 py-2 rounded hover:bg-white/10"
           : "flex items-center gap-2"
-      } text-white hover:text-yellow-300 transition duration-200`}
+        } text-white hover:text-yellow-300 transition duration-200`}
     >
       {icon}
       {label}

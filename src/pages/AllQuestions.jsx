@@ -73,11 +73,15 @@ function AllQuestionsPage() {
 
   useEffect(() => {
     const currentUser = sessionStorage.getItem("currentUser");
+    const token = localStorage.getItem("authToken");
 
-    if (currentUser) {
-      // User logged in — fetch real questions
+    if (currentUser && token) {
+      // User logged in — fetch real questions with Authorization header
       fetch("https://helpdesk-production-c4f9.up.railway.app/api/questions", {
         method: "GET",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+        },
         credentials: "include",
       })
         .then((response) => {
@@ -100,7 +104,6 @@ function AllQuestionsPage() {
       setLoading(false);
     }
   }, []);
-
   if (loading) {
     return (
       <LoadingSpinner />

@@ -14,14 +14,14 @@ function Login() {
 
   const navigate = useNavigate();
 
-  async function handleSubmit(e) {
-    e.preventDefault();
+  const handleSubmit = async (e) => {
+    if (e) e.preventDefault();
 
     setIsLoggingIn(true);
     setError(null);
 
     try {
-      
+      // Clear all cookies
       document.cookie
         .split(";")
         .forEach((cookie) => {
@@ -30,20 +30,37 @@ function Login() {
           document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/";
         });
 
-      const response = await fetch("https://helpdesk-production-c4f9.up.railway.app/api/auth/signin", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ email, password }),
-      });
+      // Send login request using fetch
+      const response = await fetch(
+        "https://helpdesk-production-c4f9.up.railway.app/api/auth/signin",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include", // important if backend uses cookies
+          body: JSON.stringify({ email, password }),
+        }
+      );
 
       const data = await response.json();
 
       if (response.ok) {
-        setLoggedInUser(data.user || null);
-        sessionStorage.setItem("currentUser", JSON.stringify(data));
+        // Save token if available
+        if (data.token) {
+          localStorage.setItem("authToken", data.token);
+        }
+
+        // Save user info in sessionStorage and state
+        if (data.user) {
+          sessionStorage.setItem("currentUser", JSON.stringify(data.user));
+          setLoggedInUser(data.user);
+        } else {
+          setLoggedInUser(null);
+        }
+
         clearInputs();
         setLoginSuccess(true);
+
+        navigate("/");
       } else if (response.status === 403 || response.status === 404) {
         setError("Incorrect email or password. Please try again.");
       } else {
@@ -51,12 +68,12 @@ function Login() {
       }
     } catch (err) {
       console.error("Login error:", err);
-      setError("Incorrect email or password. Please try again.");
-
+      setError("Login failed. Please check your network and try again.");
     } finally {
       setIsLoggingIn(false);
     }
-  }
+  };
+
 
   function clearInputs() {
     setEmail("");
