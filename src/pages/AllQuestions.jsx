@@ -84,6 +84,9 @@ function AllQuestionsPage() {
           if (!response.ok) {
             throw new Error("Network response was not ok " + response.status);
           }
+          console.log();
+          console.log(response.json());
+          
           return response.json();
         })
         .then((data) => {

@@ -83,8 +83,8 @@ function AskQuestion() {
         setSelectedCategory(null);
         setIsAnonymous(false);
       } else {
-        const errText = await response.text();
-        setQuestionError(`Failed to submit question. Server says: ${errText}`);
+        //const errText = await response.text();
+        setQuestionError(`Failed to submit question.`);
       }
     } catch (error) {
       setQuestionError(`Something went wrong: ${error.message}`);
