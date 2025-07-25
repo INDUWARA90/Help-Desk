@@ -3,16 +3,29 @@ import { Link } from 'react-router-dom';
 
 // Convert ISO date to "x minutes/hours/days ago"
 function formatPostedAgo(dateString) {
-  const postedDate = new Date(dateString);
+  if (!dateString) return 'Unknown time';
+
+  // Force UTC interpretation by appending 'Z'
+  const postedDate = new Date(dateString + 'Z');
   const now = new Date();
+
+  if (isNaN(postedDate)) return 'Invalid date';
+
   const diffMs = now - postedDate;
+  if (diffMs < 0) return 'Just now';
+
   const diffMinutes = Math.floor(diffMs / 60000);
+  if (diffMinutes < 1) return 'Just now';
   if (diffMinutes < 60) return `${diffMinutes} minute(s) ago`;
+
   const diffHours = Math.floor(diffMinutes / 60);
   if (diffHours < 24) return `${diffHours} hour(s) ago`;
+
   const diffDays = Math.floor(diffHours / 24);
   return `${diffDays} day(s) ago`;
 }
+
+
 
 // Map categoryId to readable name
 const categoryMap = {
@@ -46,7 +59,7 @@ function QuestionCard({ question }) {
           if (!res.ok) throw new Error('Failed to fetch user');
           return res.json();
         })
-        .then((data) => {setUserInfo(data)})
+        .then((data) => { setUserInfo(data) })
         .catch((err) => console.error('Error fetching user:', err));
     }
   }, [question.userId, question.anonymous]);

@@ -5,11 +5,12 @@ import { Dialog } from '@headlessui/react';
 function AskQuestion() {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState(null); // 👈 Changed
+  const [selectedCategory, setSelectedCategory] = useState(null);
   const [isAnonymous, setIsAnonymous] = useState(false);
   const [questionSuccess, setQuestionSuccess] = useState(false);
   const [questionError, setQuestionError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showCategoryError, setShowCategoryError] = useState(false);
   const [currentUser] = useState(
     JSON.parse(sessionStorage.getItem('currentUser'))
   );
@@ -18,7 +19,7 @@ function AskQuestion() {
 
   const handleCategoryClick = (category) => {
     if (selectedCategory === category) {
-      setSelectedCategory(null); // unselect if clicked again
+      setSelectedCategory(null);
     } else {
       setSelectedCategory(category);
     }
@@ -43,9 +44,12 @@ function AskQuestion() {
     const categoryId = selectedCategory ? categoryMap[selectedCategory] : 0;
 
     if (categoryId === 0) {
+      setShowCategoryError(true);
       setQuestionError('Please select a category.');
       return;
     }
+
+    setShowCategoryError(false);
 
     const newQuestion = {
       questionId: 0,
@@ -123,7 +127,7 @@ function AskQuestion() {
 
           <div>
             <label className="block text-sm font-medium mb-2">Select One Category</label>
-            <div className="flex flex-wrap gap-2">
+            <div className={`flex flex-wrap gap-2 p-2 rounded-xl border ${showCategoryError ? 'border-rose-500' : 'border-transparent'}`}>
               {availableCategories.map((cat) => {
                 const isSelected = selectedCategory === cat;
                 const isDisabled = selectedCategory !== null && selectedCategory !== cat;
@@ -146,6 +150,9 @@ function AskQuestion() {
                 );
               })}
             </div>
+            {showCategoryError && (
+              <p className="text-sm text-rose-600 mt-1">Please select a category.</p>
+            )}
           </div>
 
           <div className="flex items-center space-x-2">
