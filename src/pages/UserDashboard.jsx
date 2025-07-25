@@ -71,6 +71,28 @@ const dummyUser = {
     },
   ],
 };
+// ✅ Reusable fetch wrapper with Bearer token
+const fetchWithToken = async (url, options = {}) => {
+  const token = localStorage.getItem("authToken");
+
+  const headers = {
+    ...(options.headers || {}),
+    Authorization: `Bearer ${token}`,
+    'Content-Type': 'application/json',
+  };
+
+  const response = await fetch(url, {
+    ...options,
+    headers,
+    credentials: 'include',
+  });
+
+  if (!response.ok) {
+    throw new Error(`Fetch failed with status ${response.status}`);
+  }
+
+  return await response.json();
+};
 
 function UserDashboard() {
   const [user, setUser] = useState({
@@ -84,58 +106,20 @@ function UserDashboard() {
   const [editedTitle, setEditedTitle] = useState('');
   const [editedDescription, setEditedDescription] = useState('');
   const [selectedQuestion, setSelectedQuestion] = useState(null);
-  const [questions, setQuestions] = useState([]); // all fetched questions
+  const [questions, setQuestions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [deleting, setDeleting] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  // Delete confirmation modal state
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [questionToDelete, setQuestionToDelete] = useState(null);
-
-  // Success dialog for delete/update
   const [successMessage, setSuccessMessage] = useState(null);
 
   useEffect(() => {
     const fetchUserInfo = async () => {
       try {
-        const token = localStorage.getItem("authToken");
-
-        // Fetch user profile with token-based auth
-        const profileRes = await fetch("https://helpdesk-production-c4f9.up.railway.app/api/auth/userinfo", {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-          credentials: "include",
-        });
-
-        if (!profileRes.ok) {
-          throw new Error(`Failed to fetch profile. Status: ${profileRes.status}`);
-        }
-
-        const profileData = await profileRes.json();
-        // You can optionally do something with profileData here
-        // console.log("Profile data:", profileData);
-
-        // Then fetch detailed user info (with cookie/session auth)
-        const res = await fetch('https://helpdesk-production-c4f9.up.railway.app/api/auth/userinfo', {
-          method: 'GET',
-          credentials: 'include',
-        });
-
-        if (!res.ok) {
-          if (res.status === 401) {
-            setUser(dummyUser);
-            setQuestions(dummyUser.myQuestions);
-            setLoading(false);
-            return;
-          }
-          throw new Error(`Failed to fetch user info: ${res.status}`);
-        }
-
-        const userData = await res.json();
+        const userData = await fetchWithToken("https://helpdesk-production-c4f9.up.railway.app/api/auth/userinfo");
 
         const formattedUser = {
           userId: userData.userId,
@@ -152,9 +136,8 @@ function UserDashboard() {
 
         setUser(formattedUser);
         setQuestions(userData.questions);
-
       } catch (err) {
-        console.error(err.message);
+        console.error("User fetch failed:", err.message);
         setUser(dummyUser);
         setQuestions(dummyUser.myQuestions);
       } finally {
@@ -165,10 +148,7 @@ function UserDashboard() {
     fetchUserInfo();
   }, [editQuestion, questionToDelete]);
 
-
-  const handleSearchInputChange = (e) => {
-    setSearchTerm(e.target.value);
-  };
+  const handleSearchInputChange = (e) => setSearchTerm(e.target.value);
 
   const openEditModal = (question) => {
     setEditQuestion(question);
@@ -176,91 +156,73 @@ function UserDashboard() {
     setEditedDescription(question.description || '');
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!editQuestion) return;
+    setSaving(true);
 
-    setSaving(true); // start saving
-
-    const updatedQuestion = {
-      ...editQuestion,
-      title: editedTitle,
-      description: editedDescription,
-    };
-
-    fetch(`https://helpdesk-production-c4f9.up.railway.app/api/questions/${editQuestion.questionId}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(updatedQuestion),
-      credentials: 'include',
-    })
-      .then((res) => {
-        if (!res.ok) {
-          throw new Error(`Failed to update: ${res.status}`);
+    try {
+      await fetchWithToken(
+        `https://helpdesk-production-c4f9.up.railway.app/api/questions/${editQuestion.questionId}`,
+        {
+          method: 'PUT',
+          body: JSON.stringify({
+            ...editQuestion,
+            title: editedTitle,
+            description: editedDescription,
+          }),
         }
-        return res.json();
-      })
-      .then(() => {
-        setSuccessMessage('Question updated successfully!');
-        setEditQuestion(null);
-        setSearchTerm('');
-      })
-      .catch((err) => {
-        alert('Error updating question: ' + err.message);
-      })
-      .finally(() => {
-        setSaving(false); // finish saving
-      });
-  };
+      );
 
+      setSuccessMessage('Question updated successfully!');
+      setEditQuestion(null);
+      setSearchTerm('');
+    } catch (err) {
+      alert('Error updating question: ' + err.message);
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const confirmDelete = (question) => {
     setQuestionToDelete(question);
     setIsDeleteModalOpen(true);
   };
 
-  const performDelete = () => {
+  const performDelete = async () => {
     if (!questionToDelete) return;
+    setDeleting(true);
 
-    setDeleting(true); // Start loading
-
-    fetch(`https://helpdesk-production-c4f9.up.railway.app/api/questions/${questionToDelete.questionId}`, {
-      method: 'DELETE',
-      credentials: 'include',
-    })
-      .then((res) => {
-        if (!res.ok) {
-          throw new Error(`Failed to delete: ${res.status}`);
+    try {
+      await fetchWithToken(
+        `https://helpdesk-production-c4f9.up.railway.app/api/questions/${questionToDelete.questionId}`,
+        {
+          method: 'DELETE',
         }
-        setSuccessMessage('Question deleted successfully!');
-        setEditQuestion(null);
-        setSelectedQuestion(null);
-        setSearchTerm('');
-      })
-      .catch((err) => {
-        alert('Error deleting question: ' + err.message);
-      })
-      .finally(() => {
-        setIsDeleteModalOpen(false);
-        setQuestionToDelete(null);
-        setDeleting(false); // End loading
-      });
+      );
+
+      setSuccessMessage('Question deleted successfully!');
+      setEditQuestion(null);
+      setSelectedQuestion(null);
+      setSearchTerm('');
+    } catch (err) {
+      alert('Error deleting question: ' + err.message);
+    } finally {
+      setIsDeleteModalOpen(false);
+      setQuestionToDelete(null);
+      setDeleting(false);
+    }
   };
 
   const handleCardClick = (question) => {
     setSelectedQuestion(question);
   };
 
-  // if (!user) return <LoadingSpinner />;
-  // if (loading) return <LoadingSpinner />;
-
-  // Use user.myQuestions if exists; else fallback to filtering questions by user
   const displayedQuestions =
-    user?.myQuestions && user.myQuestions.length > 0
+    user?.myQuestions?.length > 0
       ? user.myQuestions
       : questions.filter((q) => q.userId === user.userId);
 
   const questionCount = displayedQuestions.length || 0;
-
 
   return (
     <>
