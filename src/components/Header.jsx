@@ -197,8 +197,8 @@ function NavLink({ label, to, onClick, mobile, icon }) {
       to={to}
       onClick={onClick}
       className={`${mobile
-          ? "flex items-center gap-2 px-3 py-2 rounded hover:bg-white/10"
-          : "flex items-center gap-2"
+        ? "flex items-center gap-2 px-3 py-2 rounded hover:bg-white/10"
+        : "flex items-center gap-2"
         } text-white hover:text-yellow-300 transition duration-200`}
     >
       {icon}
