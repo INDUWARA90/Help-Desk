@@ -67,14 +67,20 @@ function AskQuestion() {
     setIsSubmitting(true);
 
     try {
-      const response = await fetch('https://helpdesk-production-c4f9.up.railway.app/api/questions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify(newQuestion),
-      });
+      const token = localStorage.getItem("authToken");  // get token here
+
+      const response = await fetch(
+        'https://helpdesk-production-c4f9.up.railway.app/api/questions',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,  // add auth header here
+          },
+          credentials: 'include',
+          body: JSON.stringify(newQuestion),
+        }
+      );
 
       if (response.ok) {
         setQuestionSuccess(true);
@@ -83,7 +89,6 @@ function AskQuestion() {
         setSelectedCategory(null);
         setIsAnonymous(false);
       } else {
-        //const errText = await response.text();
         setQuestionError(`Failed to submit question.`);
       }
     } catch (error) {
@@ -139,10 +144,10 @@ function AskQuestion() {
                     onClick={() => handleCategoryClick(cat)}
                     disabled={isDisabled}
                     className={`px-4 py-2 rounded-full text-sm font-medium transition border ${isSelected
-                        ? 'bg-blue-600 text-white border-blue-600'
-                        : isDisabled
-                          ? 'bg-gray-100 text-gray-400 border-gray-300 cursor-not-allowed'
-                          : 'bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200'
+                      ? 'bg-blue-600 text-white border-blue-600'
+                      : isDisabled
+                        ? 'bg-gray-100 text-gray-400 border-gray-300 cursor-not-allowed'
+                        : 'bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200'
                       }`}
                   >
                     {cat}

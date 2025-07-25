@@ -100,6 +100,26 @@ function UserDashboard() {
   useEffect(() => {
     const fetchUserInfo = async () => {
       try {
+        const token = localStorage.getItem("authToken");
+
+        // Fetch user profile with token-based auth
+        const profileRes = await fetch("https://helpdesk-production-c4f9.up.railway.app/api/auth/userinfo", {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          credentials: "include",
+        });
+
+        if (!profileRes.ok) {
+          throw new Error(`Failed to fetch profile. Status: ${profileRes.status}`);
+        }
+
+        const profileData = await profileRes.json();
+        // You can optionally do something with profileData here
+        // console.log("Profile data:", profileData);
+
+        // Then fetch detailed user info (with cookie/session auth)
         const res = await fetch('https://helpdesk-production-c4f9.up.railway.app/api/auth/userinfo', {
           method: 'GET',
           credentials: 'include',
@@ -129,7 +149,10 @@ function UserDashboard() {
           answersGiven: 0,
           myQuestions: userData.questions,
         };
+
         setUser(formattedUser);
+        setQuestions(userData.questions);
+
       } catch (err) {
         console.error(err.message);
         setUser(dummyUser);
@@ -141,6 +164,7 @@ function UserDashboard() {
 
     fetchUserInfo();
   }, [editQuestion, questionToDelete]);
+
 
   const handleSearchInputChange = (e) => {
     setSearchTerm(e.target.value);

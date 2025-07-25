@@ -49,7 +49,7 @@ function Header() {
         setError(null);
 
         // Navigate to login page
-        navigate("/login");
+        navigate("/");
       } else {
         const errorData = await response.json();
         setError("Logout failed: " + (errorData.message || "Unknown error"));

@@ -76,19 +76,46 @@ function Home() {
     const visibleQuestions = showAll ? allQuestions : allQuestions.slice(0, 4);
 
     useEffect(() => {
-        async function fetchAnnouncements() {
+        async function fetchData() {
             setLoadingAnnouncements(true);
             setErrorAnnouncements(null);
+
             try {
-                const response = await fetch("https://helpdesk-production-c4f9.up.railway.app/api/announcements", {
+                // Get token from localStorage
+                const token = localStorage.getItem("authToken");
+
+                // Fetch user profile with Authorization header
+                const userProfileResponse = await fetch("https://helpdesk-production-c4f9.up.railway.app/api/auth/userinfo", {
                     method: "GET",
-                    credentials: "include",
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                    credentials: "include", // include cookies if any
                 });
-                if (!response.ok) {
-                    throw new Error(`Failed to fetch announcements. Status: ${response.status}`);
+
+                if (!userProfileResponse.ok) {
+                    throw new Error(`Failed to fetch user profile. Status: ${userProfileResponse.status}`);
                 }
-                const data = await response.json();
-                setAnnouncements(data);
+
+                const userProfile = await userProfileResponse.json();
+                // You can set this user profile to state if you want:
+                // setCurrentUser(userProfile);
+
+                // Then fetch announcements
+                const announcementsResponse = await fetch(
+                    "https://helpdesk-production-c4f9.up.railway.app/api/announcements",
+                    {
+                        method: "GET",
+                        credentials: "include",
+                    }
+                );
+
+                if (!announcementsResponse.ok) {
+                    throw new Error(`Failed to fetch announcements. Status: ${announcementsResponse.status}`);
+                }
+
+                const announcementsData = await announcementsResponse.json();
+                setAnnouncements(announcementsData);
             } catch (error) {
                 setErrorAnnouncements(error.message);
             } finally {
@@ -96,8 +123,9 @@ function Home() {
             }
         }
 
-        fetchAnnouncements();
+        fetchData();
     }, []);
+
 
     return (
         <>

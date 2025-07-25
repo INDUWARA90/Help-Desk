@@ -15,12 +15,6 @@ import AdminDashBord from './pages/AdminDashBord';
 import Home from './pages/Home';
 import Error from './pages/Error';
 
-// PrivateRoute component to protect routes based on authToken presence
-const PrivateRoute = ({ children }) => {
-  const token = localStorage.getItem("authToken");
-  return token ? children : <Navigate to="/login" replace />;
-};
-
 function App() {
   return (
     <Routes>
@@ -37,25 +31,25 @@ function App() {
       <Route
         path='/ask-question'
         element={
-          <PrivateRoute>
-            <AskQuestion />
-          </PrivateRoute>
+
+          <AskQuestion />
+
         }
       />
       <Route
         path='/user-dashboard'
         element={
-          <PrivateRoute>
-            <UserDashboard />
-          </PrivateRoute>
+
+          <UserDashboard />
+
         }
       />
       <Route
         path='/admin-dashBord-in'
         element={
-          <PrivateRoute>
-            <AdminDashBord />
-          </PrivateRoute>
+
+          <AdminDashBord />
+
         }
       />
 
