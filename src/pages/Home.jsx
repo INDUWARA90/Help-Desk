@@ -15,39 +15,31 @@ function Home() {
 
     const allQuestions = [
         {
-            question: "Where is the exam hall?",
-            answer: "The exam hall is located in Building C, 2nd floor near the library.",
+            "question": "Where can I find previous year question papers?",
+            "answer": "Check the university library's digital archive or request them from your department."
         },
         {
-            question: "How to connect hostel WiFi?",
-            answer:
-                "Use your student ID to log in to the hostel WiFi portal. Password is emailed by IT department.",
+            "question": "Is medical leave accepted for attendance?",
+            "answer": "Yes, with proper documents submitted to the department within the provided time period."
         },
         {
-            question: "How to apply for lab sessions?",
-            answer:
-                "You can apply through the academic portal under the 'Lab Registration' tab.",
+            "question": "What are the hostel rules?",
+            "answer": "Hostels close at 11 PM. You must return to the hostel before that time."
         },
         {
-            question: "Can I change my elective subjects?",
-            answer:
-                "Yes, within the first 2 weeks of the semester. Contact your department coordinator.",
+            "question": "What time does the canteen and campus close?",
+            "answer": "The campus main gate closes at 9 PM, and the canteen also closes around the same time. Make sure to enter the campus before 9 PM."
         },
         {
-            question: "What are the hostel rules?",
-            answer:
-                "Hostel rules include 10 PM curfew, no loud music after 9 PM, and mandatory biometric entry.",
+            "question": "How do I contact my academic advisor?",
+            "answer": "You can find your advisor's details on the academic portal under the 'My Profile' section."
         },
         {
-            question: "Where can I get ID card reissued?",
-            answer: "Visit the dean office with your old ID or a complaint copy.",
-        },
-        {
-            question: "Is medical leave accepted for attendance?",
-            answer:
-                "Yes, with proper documents submitted to the department within provide time period.",
-        },
-    ];
+            "question": "What is the dress code for lab sessions?",
+            "answer": "Wearing a lab coat and closed shoes is mandatory. Loose clothing and accessories are not allowed."
+        }
+    ]
+
 
     const dummyAnnouncements = [
         {
@@ -84,28 +76,15 @@ function Home() {
                 // Get token from localStorage
                 const token = localStorage.getItem("authToken");
 
-                // Fetch user profile with Authorization header
-                const userProfileResponse = await fetch("https://helpdesk-production-c4f9.up.railway.app/api/auth/userinfo", {
-                    method: "GET",
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
-                    credentials: "include", // include cookies if any
-                });
-
-                if (!userProfileResponse.ok) {
-                    throw new Error(`Failed to fetch user profile. Status: ${userProfileResponse.status}`);
-                }
-
-                const userProfile = await userProfileResponse.json();
-                // You can set this user profile to state if you want:
-                // setCurrentUser(userProfile);
-
-                // Then fetch announcements
+                // Then fetch announcements with Authorization header
                 const announcementsResponse = await fetch(
                     "https://helpdesk-production-c4f9.up.railway.app/api/announcements",
                     {
                         method: "GET",
+                        headers: {
+                            Authorization: `Bearer ${token}`,
+                            "Content-Type": "application/json",
+                        },
                         credentials: "include",
                     }
                 );
@@ -121,6 +100,7 @@ function Home() {
             } finally {
                 setLoadingAnnouncements(false);
             }
+
         }
 
         fetchData();
