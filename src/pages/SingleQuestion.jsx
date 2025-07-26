@@ -187,7 +187,7 @@ function SingleQuestionPage() {
                           ? 'Anonymous'
                           : userMap[ans.userId]
                           ? `${userMap[ans.userId].firstName} ${userMap[ans.userId].lastName}`
-                          : 'Unknown User'}
+                          : 'user loading....'}
                       </p>
                       <p className="italic text-gray-700 text-base">"{ans.description}"</p>
                       <p className="text-xs text-gray-500 mt-1">🕒 {new Date(ans.createdAt).toLocaleDateString()}</p>
