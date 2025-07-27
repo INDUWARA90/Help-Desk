@@ -38,24 +38,20 @@ function Home() {
             "question": "What is the dress code for lab sessions?",
             "answer": "Wearing a lab coat and closed shoes is mandatory. Loose clothing and accessories are not allowed."
         }
-    ]
-
+    ];
 
     const dummyAnnouncements = [
         {
             title: "Campus WiFi Upgrade",
-            description:
-                "The campus WiFi will be upgraded on 25th July. Expect brief outages from 2 AM to 6 AM.",
+            description: "The campus WiFi will be upgraded on 25th July. Expect brief outages from 2 AM to 6 AM.",
         },
         {
             title: "Sports Meet",
-            description:
-                "Join us for the annual sports meet starting August 1st. Register your teams at the sports office.",
+            description: "Join us for the annual sports meet starting August 1st. Register your teams at the sports office.",
         },
         {
             title: "Library Extended Hours",
-            description:
-                "The library will remain open until midnight during exam weeks to support students.",
+            description: "The library will remain open until midnight during exam weeks to support students.",
         },
     ];
 
@@ -64,19 +60,20 @@ function Home() {
     const [announcements, setAnnouncements] = useState([]);
     const [loadingAnnouncements, setLoadingAnnouncements] = useState(false);
     const [errorAnnouncements, setErrorAnnouncements] = useState(null);
+    const [isLoggedIn, setIsLoggedIn] = useState(false);
 
     const visibleQuestions = showAll ? allQuestions : allQuestions.slice(0, 4);
 
     useEffect(() => {
+        const token = localStorage.getItem("authToken");
+        if (token) {
+            setIsLoggedIn(true);
+        }
+
         async function fetchData() {
             setLoadingAnnouncements(true);
             setErrorAnnouncements(null);
-
             try {
-                // Get token from localStorage
-                const token = localStorage.getItem("authToken");
-
-                // Then fetch announcements with Authorization header
                 const announcementsResponse = await fetch(
                     "https://helpdesk-production-c4f9.up.railway.app/api/announcements",
                     {
@@ -100,18 +97,15 @@ function Home() {
             } finally {
                 setLoadingAnnouncements(false);
             }
-
         }
 
         fetchData();
     }, []);
 
-
     return (
         <>
             <Header />
             <div className="max-w-6xl mx-auto p-8 space-y-20 py-29">
-                {/* Welcome */}
                 <section className="text-center">
                     <h1 className="text-4xl font-extrabold mb-4 tracking-wide">👋 Welcome to Help Desk!</h1>
                     <p className="text-gray-700 text-lg max-w-3xl mx-auto leading-relaxed">
@@ -121,18 +115,27 @@ function Home() {
                 </section>
 
                 {/* Main Actions */}
-                <section className="flex flex-wrap justify-center gap-6">
-                    <Link to="/ask-question">
-                        <button className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white px-8 py-4 rounded-lg text-lg font-semibold shadow-md hover:scale-105 transform transition">
-                            ❓ Ask a Question
-                        </button>
-                    </Link>
-                    <Link to="/all-questions">
-                        <button className="flex items-center gap-2 bg-gray-100 px-8 py-4 rounded-lg text-lg font-semibold hover:bg-gray-200 transition shadow-sm hover:shadow-md">
-                            🔍 Browse Questions
-                        </button>
-                    </Link>
+                {/* Main Actions */}
+                <section className="flex flex-col items-center gap-4">
+                    <div className="flex flex-wrap justify-center gap-6">
+                        <Link to="/ask-question">
+                            <button className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white px-8 py-4 rounded-lg text-lg font-semibold shadow-md hover:scale-105 transform transition">
+                                ❓ Ask a Question
+                            </button>
+                        </Link>
+                        <Link to="/all-questions">
+                            <button className="flex items-center gap-2 bg-gray-100 px-8 py-4 rounded-lg text-lg font-semibold hover:bg-gray-200 transition shadow-sm hover:shadow-md">
+                                🔍 Browse Questions
+                            </button>
+                        </Link>
+                    </div>
+
+                    {/* Just display a static message below the buttons */}
+                    <p className="text-red-600 text-lg font-medium mt-8">
+                        🔒 Please login first before you ask questions.
+                    </p>
                 </section>
+
 
                 {/* Tip of the Day */}
                 <section className="p-6 bg-yellow-50 border-l-8 border-yellow-400 rounded shadow-md max-w-4xl mx-auto">
@@ -227,12 +230,6 @@ function Home() {
                         <p className="text-center text-gray-500 italic">Loading announcements...</p>
                     )}
 
-                    {/* {errorAnnouncements && (
-                        <p className="text-center text-red-600 font-semibold mb-4">
-                            Failed to load announcements, showing latest available.
-                        </p>
-                    )} */}
-
                     {!loadingAnnouncements && (
                         <div className="space-y-8">
                             {(announcements.length > 0 ? announcements : dummyAnnouncements).map(
@@ -259,7 +256,7 @@ function Home() {
                     )}
                 </section>
 
-                {/* Recently Asked Questions & Answers */}
+                {/* Recently Asked Questions */}
                 <section>
                     <h2 className="text-2xl font-semibold mb-6 flex items-center gap-2 text-blue-700">🆕 Recently Asked Questions</h2>
                     <ul className="space-y-6 max-w-3xl mx-auto">
@@ -301,7 +298,7 @@ function Home() {
                 </section>
 
                 {/* Footer */}
-                <footer className="text-center text-gray-500 text-sm mt-20 border-t border-gray-300 pt-6 select-none trun">
+                <footer className="text-center text-gray-500 text-sm mt-20 border-t border-gray-300 pt-6 select-none">
                     © 2025 Help Desk — Helping juniors succeed!
                 </footer>
             </div>
