@@ -53,7 +53,7 @@ function QuestionCard({ question }) {
   if (!question.anonymous && question.userId !== 0) {
     const token = localStorage.getItem("authToken");
 
-    fetch(`https://helpdesk-production-c4f9.up.railway.app/api/users/${question.userId}`, {
+    fetch(`http://localhost:8080/api/users/${question.userId}`, {
       method: 'GET',
       credentials: 'include', // for sending cookies if any
       headers: {

@@ -34,7 +34,7 @@ function AdminPostForms() {
     };
 
     try {
-      const response = await fetch('http://helpdesk-env.eba-pamex2iy.eu-north-1.elasticbeanstalk.com/api/announcements', {
+      const response = await fetch('http://localhost:8080/api/announcements', {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
@@ -69,7 +69,7 @@ function AdminPostForms() {
     };
 
     try {
-      const response = await fetch('https://helpdesk-production-c4f9.up.railway.app/api/categories', {
+      const response = await fetch('http://localhost:8080/api/categories', {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
@@ -103,7 +103,7 @@ function AdminPostForms() {
     };
 
     try {
-      const response = await fetch('http://helpdesk-env.eba-pamex2iy.eu-north-1.elasticbeanstalk.com/api/department', {
+      const response = await fetch('http://localhost:8080/api/department', {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },

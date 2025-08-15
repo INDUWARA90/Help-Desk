@@ -77,7 +77,7 @@ function AllQuestionsPage() {
 
     if (currentUser && token) {
       // User logged in — fetch real questions with Authorization header
-      fetch("https://helpdesk-production-c4f9.up.railway.app/api/questions", {
+      fetch("http://localhost:8080/api/questions", {
         method: "GET",
         headers: {
           "Authorization": `Bearer ${token}`,

@@ -42,7 +42,7 @@ function SingleQuestionPage() {
   const fetchUserNames = async (answers) => {
     const ids = [...new Set(answers.map((a) => a.userId))];
     const promises = ids.map((uid) =>
-      fetch(`https://helpdesk-production-c4f9.up.railway.app/api/users/${uid}`, {
+      fetch(`http://localhost:8080/api/users/${uid}`, {
         headers: getHeaders(),
       })
         .then((res) => (res.ok ? res.json() : null))
@@ -63,7 +63,7 @@ function SingleQuestionPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const res = await fetch(`https://helpdesk-production-c4f9.up.railway.app/api/questions/${id}`, {
+        const res = await fetch(`http://localhost:8080/api/questions/${id}`, {
           headers: getHeaders(),
         });
         if (!res.ok) throw new Error('Failed to fetch question');
@@ -94,7 +94,7 @@ function SingleQuestionPage() {
     };
 
     try {
-      const res = await fetch('https://helpdesk-production-c4f9.up.railway.app/api/answers', {
+      const res = await fetch('http://localhost:8080/api/answers', {
         method: 'POST',
         headers: getHeaders(true),
         body: JSON.stringify(newAnswer),
@@ -103,7 +103,7 @@ function SingleQuestionPage() {
       if (!res.ok) throw new Error('Failed to submit answer');
       await res.json();
 
-      const updatedRes = await fetch(`https://helpdesk-production-c4f9.up.railway.app/api/questions/${id}`, {
+      const updatedRes = await fetch(`http://localhost:8080/api/questions/${id}`, {
         headers: getHeaders(),
       });
       const updatedQuestion = await updatedRes.json();

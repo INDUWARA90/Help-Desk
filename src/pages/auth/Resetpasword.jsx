@@ -22,7 +22,7 @@ function ResetPassword() {
     setError("");
 
     try {
-      const response = await fetch("https://helpdesk-production-c4f9.up.railway.app/api/auth/resetcode", {
+      const response = await fetch("http://localhost:8080/api/auth/resetcode", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),
@@ -74,7 +74,7 @@ function ResetPassword() {
     };
 
     try {
-      const response = await fetch("https://helpdesk-production-c4f9.up.railway.app/api/auth/resetpassword", {
+      const response = await fetch("http://localhost:8080/api/auth/resetpassword", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",

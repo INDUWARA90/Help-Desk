@@ -15,6 +15,7 @@ import {
 import { Dialog } from "@headlessui/react";
 
 function Header() {
+  
   const [menuOpen, setMenuOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [error, setError] = useState(null);
@@ -31,7 +32,7 @@ function Header() {
   const handleLogout = async () => {
     try {
       const response = await fetch(
-        "https://helpdesk-production-c4f9.up.railway.app/api/auth/signout",
+        "http://localhost:8080/api/auth/signout",
         {
           method: "POST",
           credentials: "include",

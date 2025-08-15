@@ -70,7 +70,7 @@ function AskQuestion() {
       const token = localStorage.getItem("authToken");  // get token here
 
       const response = await fetch(
-        'https://helpdesk-production-c4f9.up.railway.app/api/questions',
+        'http://localhost:8080/api/questions',
         {
           method: 'POST',
           headers: {

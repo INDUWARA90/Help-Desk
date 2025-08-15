@@ -119,7 +119,7 @@ function UserDashboard() {
   useEffect(() => {
     const fetchUserInfo = async () => {
       try {
-        const userData = await fetchWithToken("https://helpdesk-production-c4f9.up.railway.app/api/auth/userinfo");
+        const userData = await fetchWithToken("http://localhost:8080/api/auth/userinfo");
 
         const formattedUser = {
           userId: userData.userId,
@@ -162,7 +162,7 @@ function UserDashboard() {
 
     try {
       await fetchWithToken(
-        `https://helpdesk-production-c4f9.up.railway.app/api/questions/${editQuestion.questionId}`,
+        `http://localhost:8080/api/questions/${editQuestion.questionId}`,
         {
           method: 'PUT',
           body: JSON.stringify({
@@ -194,7 +194,7 @@ function UserDashboard() {
 
     try {
       await fetchWithToken(
-        `https://helpdesk-production-c4f9.up.railway.app/api/questions/${questionToDelete.questionId}`,
+        `http://localhost:8080/api/questions/${questionToDelete.questionId}`,
         {
           method: 'DELETE',
         }

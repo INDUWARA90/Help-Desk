@@ -75,7 +75,7 @@ function Home() {
             setErrorAnnouncements(null);
             try {
                 const announcementsResponse = await fetch(
-                    "https://helpdesk-production-c4f9.up.railway.app/api/announcements",
+                    "http://localhost:8080/api/announcements",
                     {
                         method: "GET",
                         headers: {
